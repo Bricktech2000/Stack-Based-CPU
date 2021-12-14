@@ -3,6 +3,7 @@ instruction_opcode:
   00 : nop : no operation
   01 : x00 : one-byte value
   02 : htl : halt
+
   11 : lda : load value from memory address to stack
   12 : sta : store value to memory address from stack
   13 : ldp : load stack pointer to stack
@@ -16,6 +17,7 @@ instruction_opcode:
   1B : dug : duplicate two values on stack (duplicate arguments)
   1C : drg : drop two values from stack (drop arguments)
   1D : swp : swap two values on stack
+
   20 : add : addition
   21 : adc : addition with carry
   22 : sub : subtraction
@@ -25,6 +27,7 @@ instruction_opcode:
   26 : ltz : is less than zero
   27 : gtz : is greater than zero
   28 : nez : is not equal to zero
+
   30 : not : bitwise not
   31 : oor : bitwise or
   32 : and : bitwise and
