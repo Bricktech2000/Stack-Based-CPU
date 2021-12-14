@@ -17,7 +17,6 @@ fn main() {
   let mut out_bytes: Vec<u8> = vec![];
   let mut accumulator: u8 = 0;
   let mut first_byte = true;
-  // println!("{:?}", get_file_as_byte_vec(&args[1]));
   // https://doc.rust-lang.org/rust-by-example/flow_control/for.html
   // https://doc.rust-lang.org/rust-by-example/types/cast.html
   let hex_chars: Vec<char> = vec!['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'];
@@ -42,7 +41,6 @@ fn main() {
       // probably a comment
       continue;
     }
-    // println!("{}", *hex_byte as char);
   }
   println!("Writing bytes: {:x?}", out_bytes);
   fs::write(format!("{}{}", &args[1], ".bin"), out_bytes).expect("Unable to write file.");
