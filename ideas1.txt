@@ -90,7 +90,7 @@ false:
 
 
 examples:
-// check whether the least significant bit of the value on the stack is zet
+// check whether the least significant bit of the value on the stack is zero (whether the number is even)
 // if so, `true` is pushed to the stack, otherwise `false`
 x01 and nez not
 // bitwise and with 1
@@ -103,8 +103,15 @@ ldp 5 sub stp-s-w
 // subtract 5
 // store stack pointer to working pointer
 
-
-
+// conditional branch 0x15 bytes backwards
+xFF x15 and dec ldi sub sti
+// load `true` onto the stack
+// add 0x15 to that to create an offset
+// bitwise-and both values together
+// decrement the offset
+// load instruction register
+// subtract offset from instruction register
+// store instruction register
 
 
 
