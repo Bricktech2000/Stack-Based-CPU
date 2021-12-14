@@ -1,0 +1,133 @@
+
+instruction_opcode:
+  00 : nop : no operation
+  01 : x00 : one-byte value
+  02 : htl : halt
+  11 : lda : load value from memory address to stack
+  12 : sta : store value to memory address from stack
+  13 : ldp : load stack pointer to stack
+  14 : stp : store stack pointer from stack
+  15 : ldi : load instruction pointer to stack
+  16 : sti : store instruction pointer from stack
+  17 : ldc : load carry flag to stack
+  18 : stc : store carry flag from stack
+  19 : dup : duplicate value on stack
+  1A : drp : drop value from stack
+  1B : dug : duplicate two values on stack (duplicate arguments)
+  1C : drg : drop two values from stack (drop arguments)
+  1D : swp : swap two values on stack
+  20 : add : addition
+  21 : adc : addition with carry
+  22 : sub : subtraction
+  23 : sbc : subtraction with borrow
+  24 : inc : increment
+  25 : dec : decrement
+  26 : ltz : is less than zero
+  27 : gtz : is greater than zero
+  28 : nez : is not equal to zero
+  30 : not : bitwise not
+  31 : oor : bitwise or
+  32 : and : bitwise and
+  33 : xor : bitwise xor
+  34 : shl : left shift
+  35 : shr : right shift
+  36 : slc : carry left shift
+  37 : src : carry right shift
+  38 : sla : arithmetic left shift
+  39 : sra : arithmetic right shift
+
+
+suffixes (bitwise or with instruction_opcode):
+  00 : -s-s : from stack pointer to stack pointer (default)
+  40 : -s-w : from stack pointer to working pointer
+  80 : -w-s : from working pointer to stack pointer
+  C0 : -w-w : from working pointer to working pointer
+
+other (not implemented yet):
+  signed / unsigned?
+  jumps / compares?
+  syscalls / interrupts?
+  timer?
+  neg : negate
+  abs : absolute value
+
+unused (not implemented):
+  rol : rotate left
+  ror : rotate right
+  rlc : carry rotate left
+  rrc : carry rotate right
+
+
+
+program:
+  instruction*
+
+instruction:
+  S S O O O O O O | val_instruction
+where
+  S S : whether the first and second operands use the stack or work pointer
+  O O O O O O : instruction_opcode
+
+val_instruction:
+  S S O O O O O O I I I I I I I I
+where
+  S S : whether the first and second operands use the stack or work pointer
+  O O O O O O : instruction_opcode
+  I I I I I I I I : immediate value
+
+true:
+  1 1 1 1 1 1 1 1
+
+false:
+  0 0 0 0 0 0 0 0
+
+
+
+
+
+
+examples:
+// check whether the least significant bit of the value on the stack is zet
+// if so, `true` is pushed to the stack, otherwise `false`
+x01 and nez not
+// bitwise and with 1
+// check if value is not zero
+// run a bitwise not on the value
+
+// set the working pointer 5 bytes before the stack pointer
+ldp 5 sub stp-s-w
+// load stack pointer
+// subtract 5
+// store stack pointer to working pointer
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+S S : size of the operand(s) : 2 ^ S bytes
