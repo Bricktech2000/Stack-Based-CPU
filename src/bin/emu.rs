@@ -1,7 +1,12 @@
 use std::env;
 use std::fs;
 
+
 fn main() {
+  let const_mem_size: usize = 256;
+  let const_true: u8 = 255;
+  let const_false: u8 = 0;
+
   let args: Vec<String> = env::args().collect();
   if args.len() != 2 {
     println!("Usage: emu <filename>");
@@ -14,14 +19,11 @@ fn main() {
   // https://doc.rust-lang.org/std/primitive.array.html
   // https://stackoverflow.com/questions/25805174/creating-a-fixed-size-array-on-heap-in-rust
   // https://stackoverflow.com/questions/46102811/why-i-can-not-use-u8-as-an-index-value-of-a-rust-array
-  let mut memory: Vec<u8> = vec![0u8; 256];
-  let mut stack_pointer: u8 = 255;
+  let mut memory: Vec<u8> = vec![0u8; const_mem_size];
+  let mut stack_pointer: u8 = (const_mem_size - 1) as u8;
   let mut instruction_pointer: u8 = 0;
   let mut load_next: bool = false;
 
-  // consts:
-  // 256
-  // true and false
   // todo:
   // carry
   // instruction ptr
@@ -65,9 +67,9 @@ fn main() {
       //0x23 => not implemented,
       0x24 => { memory[stack_pointer as usize] += 1 },
       0x25 => { memory[stack_pointer as usize] -= 1 },
-      0x26 => { memory[stack_pointer as usize] = if memory[stack_pointer as usize] > 127 { 255 } else { 0 }; },
-      0x27 => { memory[stack_pointer as usize] = if memory[stack_pointer as usize] < 127 { 255 } else { 0 }; },
-      0x28 => { memory[stack_pointer as usize] = if memory[stack_pointer as usize] != 0 { 255 } else { 0 }; },
+      0x26 => { memory[stack_pointer as usize] = if memory[stack_pointer as usize] > 127 { const_true } else { const_false }; },
+      0x27 => { memory[stack_pointer as usize] = if memory[stack_pointer as usize] < 127 { const_true } else { const_false }; },
+      0x28 => { memory[stack_pointer as usize] = if memory[stack_pointer as usize] != 0 { const_true } else { const_false }; },
 
       0x30 => { memory[stack_pointer as usize] = !memory[stack_pointer as usize]; },
       0x31 => { memory[stack_pointer as usize + 1] = memory[stack_pointer as usize] | memory[stack_pointer as usize]; stack_pointer += 1; memory[stack_pointer as usize - 1] = 0; },
