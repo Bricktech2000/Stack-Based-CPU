@@ -8,9 +8,9 @@ fn main() {
   let const_true = 255;
   let const_false = 0;
   let const_break_lookup: [&str; 3] = [
-    "Error: reached end of binary without halt.",
+    "Error: Didn't encounter halt instruction.",
     "Error: Ran into invalid instruction.",
-    "Successful.",
+    "Success: Halt instruction reached.",
   ];
   let const_ext = 0;
   let const_unk = 1;
@@ -214,7 +214,7 @@ fn main() {
       println!("op_code = mnemonic:  {:02x} = {}", in_byte, mnemonic);
       // https://stackoverflow.com/questions/44690439/how-do-i-print-an-integer-in-binary-with-leading-zeros
       // https://stackoverflow.com/questions/44549759/return-last-n-elements-of-vector-in-rust-without-mutating-the-vector
-      println!("memory slice: {:02x?}", memory.as_slice()[memory.len()-0x16..].to_vec());
+      println!("memory slice:        {:02x?}", memory.as_slice()[memory.len()-0x0B..].to_vec());
       println!("");
     }
 
