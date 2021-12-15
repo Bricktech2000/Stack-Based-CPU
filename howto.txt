@@ -1,3 +1,3 @@
 rust create multiple binaries: https://stackoverflow.com/questions/36604010/how-can-i-build-multiple-binaries-with-cargo
 run on bash:
-clear; cargo run --bin asm src/samples/test6.asm; cargo run --bin emu src/samples/test6.asm.bin
+clear; cargo run --bin asm src/tests/test8.asm; cargo run --bin emu src/tests/test8.asm.bin
