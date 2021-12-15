@@ -210,8 +210,8 @@ fn main() {
           "unk" },
     };
     if const_delay != 0 {
-      println!("pointers: stack instruction: {:02x} {:02x}", stack_pointer, instruction_pointer);
-      println!("op_code: {:02x}, mnemonic: {}", in_byte, mnemonic);
+      println!("stack - instruction: {:02x} - {:02x}", stack_pointer, instruction_pointer);
+      println!("op_code = mnemonic:  {:02x} = {}", in_byte, mnemonic);
       // https://stackoverflow.com/questions/44690439/how-do-i-print-an-integer-in-binary-with-leading-zeros
       // https://stackoverflow.com/questions/44549759/return-last-n-elements-of-vector-in-rust-without-mutating-the-vector
       println!("memory slice: {:02x?}", memory.as_slice()[memory.len()-0x16..].to_vec());

@@ -23,7 +23,7 @@ instruction_opcode:
 instruction_opcode:
   0 0 :
       00 : nop : no operation
-      01 : x00 : load 8-bit immediate
+      01 : x00 : load 8-bit immediate to stack
       02 : htl : halt
 
       11 : lda : load value from memory address to stack
