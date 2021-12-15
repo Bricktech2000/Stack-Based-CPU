@@ -63,7 +63,7 @@ fn main() {
           0x01 => {
             instruction_pointer += 1;
             arg1 = in_bytes[instruction_pointer as usize];
-            push(&mut memory, &mut stack_pointer, arg1);
+            psh(&mut memory, &mut stack_pointer, arg1);
             "ldv" },
           0x02 => {
             break_type = const_hlt;
@@ -72,7 +72,7 @@ fn main() {
           0x11 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
             arg2 = get(&mut memory, &mut arg1);
-            push(&mut memory, &mut stack_pointer, arg2);
+            psh(&mut memory, &mut stack_pointer, arg2);
             "lda" },
           0x12 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
@@ -81,7 +81,7 @@ fn main() {
             "sta" },
           0x13 => {
             arg1 = stack_pointer;
-            push(&mut memory, &mut stack_pointer, arg1);
+            psh(&mut memory, &mut stack_pointer, arg1);
             "ldp" },
           0x14 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
@@ -89,7 +89,7 @@ fn main() {
             "stp" },
           0x15 => {
             arg1 = instruction_pointer + 1;
-            push(&mut memory, &mut stack_pointer, arg1);
+            psh(&mut memory, &mut stack_pointer, arg1);
             "ldi" },
           0x16 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
@@ -99,8 +99,8 @@ fn main() {
           // 0x18 stc
           0x19 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
-            push(&mut memory, &mut stack_pointer, arg1);
-            push(&mut memory, &mut stack_pointer, arg1);
+            psh(&mut memory, &mut stack_pointer, arg1);
+            psh(&mut memory, &mut stack_pointer, arg1);
             "dup" },
           0x1A => {
             pop(&mut memory, &mut stack_pointer);
@@ -108,80 +108,80 @@ fn main() {
           0x1B => {
             arg1 = pop(&mut memory, &mut stack_pointer);
             arg2 = pop(&mut memory, &mut stack_pointer);
-            push(&mut memory, &mut stack_pointer, arg1);
-            push(&mut memory, &mut stack_pointer, arg2);
+            psh(&mut memory, &mut stack_pointer, arg1);
+            psh(&mut memory, &mut stack_pointer, arg2);
             "swp" },
 
           0x20 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
             arg2 = pop(&mut memory, &mut stack_pointer);
-            push(&mut memory, &mut stack_pointer, arg1 + arg2);
+            psh(&mut memory, &mut stack_pointer, arg1 + arg2);
             "add" },
           // 0x21 adc
           0x22 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
             arg2 = pop(&mut memory, &mut stack_pointer);
-            push(&mut memory, &mut stack_pointer, arg1 - arg2);
+            psh(&mut memory, &mut stack_pointer, arg1 - arg2);
             "sub" },
           // 0x23 subc
           0x24 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
             arg1 += 1;
-            push(&mut memory, &mut stack_pointer, arg1);
+            psh(&mut memory, &mut stack_pointer, arg1);
             "inc" },
           0x25 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
             arg1 -= 1;
-            push(&mut memory, &mut stack_pointer, arg1);
+            psh(&mut memory, &mut stack_pointer, arg1);
             "dec" },
           0x26 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
             arg2 = pop(&mut memory, &mut stack_pointer);
-            push(&mut memory, &mut stack_pointer, if arg1 < arg2 { const_true } else { const_false });
+            psh(&mut memory, &mut stack_pointer, if arg1 < arg2 { const_true } else { const_false });
             "ilt" },
           0x27 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
             arg2 = pop(&mut memory, &mut stack_pointer);
-            push(&mut memory, &mut stack_pointer, if arg1 > arg2 { const_true } else { const_false });
+            psh(&mut memory, &mut stack_pointer, if arg1 > arg2 { const_true } else { const_false });
             "igt" },
           0x28 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
             arg2 = pop(&mut memory, &mut stack_pointer);
-            push(&mut memory, &mut stack_pointer, if arg1 == arg2 { const_true } else { const_false });
+            psh(&mut memory, &mut stack_pointer, if arg1 == arg2 { const_true } else { const_false });
             "ieq" },
           0x29 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
             arg2 = 0;
-            push(&mut memory, &mut stack_pointer, if arg1 != arg2 { const_true } else { const_false });
+            psh(&mut memory, &mut stack_pointer, if arg1 != arg2 { const_true } else { const_false });
             "nez" },
           0x2A => {
             arg1 = pop(&mut memory, &mut stack_pointer);
-            push(&mut memory, &mut stack_pointer, -(arg1 as i8) as u8);
+            psh(&mut memory, &mut stack_pointer, -(arg1 as i8) as u8);
             "not" },
           0x2B => {
             // https://stackoverflow.com/questions/27182808/how-do-i-get-an-absolute-value-in-rust/55944670
             arg1 = pop(&mut memory, &mut stack_pointer);
-            push(&mut memory, &mut stack_pointer, (arg1 as i8).abs() as u8);
+            psh(&mut memory, &mut stack_pointer, (arg1 as i8).abs() as u8);
             "not" },
 
           0x30 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
-            push(&mut memory, &mut stack_pointer, !arg1);
+            psh(&mut memory, &mut stack_pointer, !arg1);
             "not" },
           0x31 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
             arg2 = pop(&mut memory, &mut stack_pointer);
-            push(&mut memory, &mut stack_pointer, arg1 | arg2);
+            psh(&mut memory, &mut stack_pointer, arg1 | arg2);
             "oor" },
           0x32 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
             arg2 = pop(&mut memory, &mut stack_pointer);
-            push(&mut memory, &mut stack_pointer, arg1 & arg2);
+            psh(&mut memory, &mut stack_pointer, arg1 & arg2);
             "and" },
           0x33 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
             arg2 = pop(&mut memory, &mut stack_pointer);
-            push(&mut memory, &mut stack_pointer, arg1 ^ arg2);
+            psh(&mut memory, &mut stack_pointer, arg1 ^ arg2);
             "xor" },
 
 
@@ -200,14 +200,14 @@ fn main() {
         0b10 => {
           arg1 = op_code;
           arg2 = get(&mut memory, &mut (stack_pointer + arg1));
-          push(&mut memory, &mut stack_pointer, arg2);
+          psh(&mut memory, &mut stack_pointer, arg2);
           "ldo"
         },
         0b11 => {
           match bits54 {
             0b11 => {
               arg1 = low_nibble;
-              push(&mut memory, &mut stack_pointer, arg1);
+              psh(&mut memory, &mut stack_pointer, arg1);
               "ldv" },
             _ => {
               println!("Invalid or Unknown Instruction {:#04x}", in_byte);
@@ -242,7 +242,7 @@ fn main() {
   println!("CPU Halted. {}", const_break_lookup[break_type]);
 }
 
-fn push(memory: &mut Vec<u8>, stack_pointer: &mut u8, value: u8) { *stack_pointer -= 1; memory[*stack_pointer as usize] = value; }
+fn psh(memory: &mut Vec<u8>, stack_pointer: &mut u8, value: u8) { *stack_pointer -= 1; memory[*stack_pointer as usize] = value; }
 fn pop(memory: &mut Vec<u8>, stack_pointer: &mut u8) -> u8 { let temp: u8 = memory[*stack_pointer as usize]; memory[*stack_pointer as usize] = 0; *stack_pointer += 1; temp }
 fn set(memory: &mut Vec<u8>, pointer: &mut u8, value: u8) { memory[*pointer as usize] = value; }
 fn get(memory: &mut Vec<u8>, pointer: &mut u8) -> u8 { memory[*pointer as usize] }
