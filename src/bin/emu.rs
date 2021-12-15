@@ -216,13 +216,13 @@ fn main() {
       // https://stackoverflow.com/questions/44549759/return-last-n-elements-of-vector-in-rust-without-mutating-the-vector
       println!("memory slice: {:02x?}", memory.as_slice()[memory.len()-0x16..].to_vec());
       println!("");
-      
-      instruction_pointer += 1;
-      if break_type > 0 { break; }
-      // https://stackoverflow.com/questions/28952938/how-can-i-put-the-current-thread-to-sleep
-      thread::sleep(Duration::from_millis(const_delay));
-      // _pause();
     }
+
+    instruction_pointer += 1;
+    if break_type > 0 { break; }
+    // https://stackoverflow.com/questions/28952938/how-can-i-put-the-current-thread-to-sleep
+    thread::sleep(Duration::from_millis(const_delay));
+    // _pause();
   }
   println!("");
   // https://newbedev.com/get-last-element-of-vector-rust-code-example
