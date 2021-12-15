@@ -102,15 +102,15 @@ fn main() {
       };
     }
     if const_delay != 0 {
-      println!("pointers: [stack, work, instruction]: {:#04x} {:#04x} {:#04x}", p[const_stack], p[const_work], p[const_instruction]);
+      println!("pointers: [stack, work, instruction]: {:02x} {:02x} {:02x}", p[const_stack], p[const_work], p[const_instruction]);
       if load_next {
         println!("value: {:x}", op_code);
       } else {
         // https://stackoverflow.com/questions/44690439/how-do-i-print-an-integer-in-binary-with-leading-zeros
-        println!("op_code: {:#04x}, prefix: {:#04b}, mnemonic: {}{}", op_code, prefix, mnemonic, ["", "-s-w", "-w-s", "-w-w"][prefix as usize]);
+        println!("op_code: {:02x}, prefix: {:02b}, mnemonic: {}{}", op_code, prefix, mnemonic, ["", "-s-w", "-w-s", "-w-w"][prefix as usize]);
       }
       // https://stackoverflow.com/questions/44549759/return-last-n-elements-of-vector-in-rust-without-mutating-the-vector
-      println!("memory slice: {:x?}", memory.as_slice()[memory.len()-0x16..].to_vec());
+      println!("memory slice: {:02x?}", memory.as_slice()[memory.len()-0x16..].to_vec());
       println!("");
     }
     p[const_instruction] += 1;
