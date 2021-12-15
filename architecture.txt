@@ -1,26 +1,4 @@
-instruction_opcode:
-  00:
-
-
-
-00 xxxxxx: normal, operating on stack
-11 bb xxxx: normal, with 4-bit argument
-10 xxxxxx: load from offset
-01 xxxxxx: store to offset
-
-
-11 bb             xxxx
-
-11 shift          right/left 3-bit-value
-11 shiftc         right/left 3-bit-value
-11 shifta         right/left 3-bit-value
-11 load-immediate 4-bit value
-
-
-
-
-
-instruction_opcode:
+opcodes:
   0 0 :
       00 : nop : no operation
       01 : x00 : load 8-bit immediate to stack
@@ -36,7 +14,7 @@ instruction_opcode:
       18 : stc : store carry flag from stack
       19 : dup : duplicate value on stack
       1A : drp : drop value from stack
--     1B : swp : swap two values on stack
+      1B : swp : swap two values on stack
 
       20 : add : addition
       21 : adc : addition with carry
@@ -44,10 +22,12 @@ instruction_opcode:
       23 : sbc : subtraction with borrow
       24 : inc : increment
       25 : dec : decrement
--     26 : ilt : is less than
--     27 : igt : is greater than
--     28 : ieq : is equal
--     29 : nez : is not equal to zero
+      26 : ilt : is less than
+      27 : igt : is greater than
+      28 : ieq : is equal
+      29 : nez : is not equal to zero
+      2A : neg : signed negation
+      2B : abs : signed absolute value
 
       30 : not : bitwise not
       31 : oor : bitwise or
@@ -68,32 +48,16 @@ instruction_opcode:
       1 1 : load 4-bit immediate to stack
 
 
-
-other (not implemented yet):
-  signed / unsigned?
-  jumps / compares?
-  syscalls / interrupts?
-  timer?
-  neg : negate
-  abs : absolute value
-
-program:
-  instruction*
-
-instruction:
-  0 0 E E E E E E |
-  0 1 V V V V V V |
-  1 0 V V V V V V |
-  1 1 E E V V V V
-where
-  E : opcode
-  V : operand
-
 true:
   1 1 1 1 1 1 1 1
 
 false:
   0 0 0 0 0 0 0 0
+
+
+other (not implemented yet):
+  syscalls / interrupts?
+  timers?
 
 
 

@@ -154,6 +154,15 @@ fn main() {
             arg2 = 0;
             push(&mut memory, &mut stack_pointer, if arg1 != arg2 { const_true } else { const_false });
             "nez" },
+          0x2A => {
+            arg1 = pop(&mut memory, &mut stack_pointer);
+            push(&mut memory, &mut stack_pointer, -(arg1 as i8) as u8);
+            "not" },
+          0x2B => {
+            // https://stackoverflow.com/questions/27182808/how-do-i-get-an-absolute-value-in-rust/55944670
+            arg1 = pop(&mut memory, &mut stack_pointer);
+            push(&mut memory, &mut stack_pointer, (arg1 as i8).abs() as u8);
+            "not" },
 
           0x30 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
@@ -177,7 +186,7 @@ fn main() {
 
 
           _ => {
-            println!("Invalid or Non-Implemented Instruction {:x?}", in_byte);
+            println!("Invalid or Unknown Instruction {:#04x}", in_byte);
             break_type = const_unk;
             "unk" },
           }
@@ -201,7 +210,7 @@ fn main() {
               push(&mut memory, &mut stack_pointer, arg1);
               "ldv" },
             _ => {
-              println!("Invalid or Non-Implemented Instruction {:x?}", in_byte);
+              println!("Invalid or Unknown Instruction {:#04x}", in_byte);
               break_type = const_unk;
               "unk" },
           }
@@ -229,7 +238,7 @@ fn main() {
   if break_type == const_hlt && stack_pointer != -1i8 as u8 { break_type = const_stk; }
   println!("");
   // https://newbedev.com/get-last-element-of-vector-rust-code-example
-  println!("Exit code: 0x{:x} ({})", memory.last().unwrap(), memory.last().unwrap());
+  println!("Exit code: {:#04x}, {:#010b} ({}, {})", memory.last().unwrap(), memory.last().unwrap(), memory.last().unwrap(), *memory.last().unwrap() as i8);
   println!("CPU Halted. {}", const_break_lookup[break_type]);
 }
 
