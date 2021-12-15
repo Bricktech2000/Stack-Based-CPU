@@ -7,14 +7,16 @@ fn main() {
   let const_delay = 50; // ms
   let const_true = 255;
   let const_false = 0;
-  let const_break_lookup: [&str; 3] = [
+  let const_break_lookup: [&str; 4] = [
     "Error: Didn't encounter halt instruction.",
     "Error: Ran into invalid instruction.",
-    "Success: Halt instruction reached.",
+    "Error: More than one byte on the stack.",
+    "Success.",
   ];
   let const_ext = 0;
   let const_unk = 1;
-  let const_hlt = 2;
+  let const_stk = 2;
+  let const_hlt = 3;
 
   let args: Vec<String> = env::args().collect();
   if args.len() != 2 {
@@ -224,6 +226,7 @@ fn main() {
     thread::sleep(Duration::from_millis(const_delay));
     // _pause();
   }
+  if break_type == const_hlt && stack_pointer != -1i8 as u8 { break_type = const_stk; }
   println!("");
   // https://newbedev.com/get-last-element-of-vector-rust-code-example
   println!("Exit code: 0x{:x} ({})", memory.last().unwrap(), memory.last().unwrap());
