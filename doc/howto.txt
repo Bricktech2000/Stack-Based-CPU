@@ -6,7 +6,22 @@ clear; cargo run --bin asm src/tests/test9.asm; cargo run --bin emu src/tests/te
 srcs:
 
 asm:
-
+https://doc.rust-lang.org/book/ch12-01-accepting-command-line-arguments.html
+https://stackoverflow.com/questions/31192956/whats-the-de-facto-way-of-reading-and-writing-files-in-rust-1-x
+https://stackoverflow.com/questions/23975391/how-to-convert-a-string-into-a-static-str
+https://stackoverflow.com/questions/32132218/how-do-i-transfer-ownership-of-strings
+https://blog.mgattozzi.dev/how-do-i-str-string/
+https://stackoverflow.com/questions/19076719/how-do-i-convert-a-vector-of-bytes-u8-to-a-string
+https://stackoverflow.com/questions/25383488/how-to-match-a-string-against-string-literals
+github copilot magic
+https://stackoverflow.com/questions/32381414/converting-a-hexadecimal-string-to-a-decimal-integer
+https://doc.rust-lang.org/std/collections/struct.HashMap.html
+https://doc.rust-lang.org/std/collections/struct.HashMap.html
+https://turreta.com/2019/09/11/rust-how-to-get-keys-and-values-from-hashmap/
+https://stackoverflow.com/questions/45724517/how-to-iterate-through-a-hashmap-print-the-key-value-and-remove-the-value-in-ru
+https://stackoverflow.com/questions/32132218/how-do-i-transfer-ownership-of-strings
+https://doc.rust-lang.org/rust-by-example/flow_control/for.html
+https://doc.rust-lang.org/rust-by-example/types/cast.html
 
 emu:
 https://doc.rust-lang.org/std/primitive.array.html

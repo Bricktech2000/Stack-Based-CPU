@@ -15,7 +15,6 @@ fn main() {
     "Success.",
   ];
 
-  // https://doc.rust-lang.org/book/ch12-01-accepting-command-line-arguments.html
   let args: Vec<String> = env::args().collect();
   if args.len() != 2 {
     println!("Usage: asm <filename>");
@@ -24,9 +23,6 @@ fn main() {
 
   println!("Assembling Binary...");
 
-  // https://stackoverflow.com/questions/31192956/whats-the-de-facto-way-of-reading-and-writing-files-in-rust-1-x
-  // https://stackoverflow.com/questions/23975391/how-to-convert-a-string-into-a-static-str
-  // https://stackoverflow.com/questions/32132218/how-do-i-transfer-ownership-of-strings
   let in_bytes: Vec<u8> = fs::read(&args[1]).expect("Unable to read file.");
   let mut out_bytes: Vec<u8> = vec![];
   let mut current_tok: String = String::new();
@@ -38,7 +34,6 @@ fn main() {
   let mut break_type = const_ok;
   while index < in_bytes.len() {
     let in_char: u8 = in_bytes[index];
-    // https://blog.mgattozzi.dev/how-do-i-str-string/
     // ignore whitespace and comments
     if " \n\t".contains(in_char as char) {
       index += 1;
@@ -51,17 +46,13 @@ fn main() {
       break;
     }
 
-    // https://stackoverflow.com/questions/19076719/how-do-i-convert-a-vector-of-bytes-u8-to-a-string
-    // https://stackoverflow.com/questions/25383488/how-to-match-a-string-against-string-literals
     let matched: bool = match current_tok.as_str() {
       "x" | "p" => {
-        // github copilot magic
         let mut hex_str: String = String::new();
         index += 1;
         hex_str.push(in_bytes[index] as char);
         index += 1;
         hex_str.push(in_bytes[index] as char);
-        // https://stackoverflow.com/questions/32381414/converting-a-hexadecimal-string-to-a-decimal-integer
         let hex_num = u8::from_str_radix(hex_str.as_str(), 16).expect("Unable to parse hex.");
         if current_tok.as_str() == "x" {
           if last_was_offset {
@@ -197,7 +188,7 @@ fn main() {
         last_was_offset = true;
         out_bytes.push(0xC0);
         true },
-      //shifts
+      //TODO: shifts
 
       "#" => {
         index += 1;
@@ -209,7 +200,6 @@ fn main() {
           index += 1;
           label.push(in_bytes[index] as char);
         }
-        // https://doc.rust-lang.org/std/collections/struct.HashMap.html
         out_bytes.push(0x01);
         out_bytes.push(0xCC);
         mention_to_label.insert(out_bytes.len() as u8 - 1, label);
@@ -220,7 +210,6 @@ fn main() {
           index += 1;
           label.push(in_bytes[index] as char);
         }
-        // https://doc.rust-lang.org/std/collections/struct.HashMap.html
         label_to_value.insert(label, out_bytes.len() as u8);
         true },
       _ => { false },
@@ -231,9 +220,6 @@ fn main() {
     index += 1;
     if break_type != const_ok { break; }
   }
-  // https://turreta.com/2019/09/11/rust-how-to-get-keys-and-values-from-hashmap/
-  // https://stackoverflow.com/questions/45724517/how-to-iterate-through-a-hashmap-print-the-key-value-and-remove-the-value-in-ru
-  // https://stackoverflow.com/questions/32132218/how-do-i-transfer-ownership-of-strings
   for (mention, label) in mention_to_label.iter() {
     match label_to_value.get(label) {
       Some(value) => {
@@ -246,11 +232,20 @@ fn main() {
   if break_type == const_ok && current_tok.len() > 0 { break_type = const_eof; }
 
   println!("Assembly complete. {}", const_break_lookup[break_type]);
-  // https://doc.rust-lang.org/rust-by-example/flow_control/for.html
-  // https://doc.rust-lang.org/rust-by-example/types/cast.html
   if break_type == const_ok {
     println!("Writing bytes...");
     fs::write(format!("{}{}", &args[1], ".bin"), out_bytes).expect("Unable to write file.");
     println!("Done.");
   }
+}
+
+fn die(code: usize, instruction_pointer: u8, value: u8) {
+  let message: &str = [
+    "Success ",
+    "",
+  ][code];
+
+  println!("Fatal Error at {:02x}: {}{:02x}.", instruction_pointer, message, value);
+  println!("Exiting.");
+  std::process::exit(code as i32);
 }
