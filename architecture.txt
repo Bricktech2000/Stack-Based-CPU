@@ -32,7 +32,8 @@ opcodes:
       30 : not : bitwise not
       31 : oor : bitwise or
       32 : and : bitwise and
-      33 : xor : bitwise xor
+      33 : xor : bitwise exclusive or
+      34 : xnd : bitwise exclusive and
   0 1 : sto : store to offset from stack pointer
   1 0 : ldo : load from offset from stack pointer
   1 1 :

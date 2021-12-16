@@ -13,10 +13,10 @@ fn main() {
     "Error: More than one byte on the stack.",
     "Success.",
   ];
-  let const_ext = 0;
+  let const_hlt = 0;
   let const_unk = 1;
   let const_stk = 2;
-  let const_hlt = 3;
+  let const_ok = 3;
 
   let args: Vec<String> = env::args().collect();
   if args.len() != 2 {
@@ -34,11 +34,7 @@ fn main() {
   let mut stack_pointer: u8 = 0;
   let mut instruction_pointer: u8 = 0;
 
-  // todo:
-  // carry
-  // instruction ptr
-
-  let mut break_type = const_ext;
+  let mut break_type = const_ok;
   while (instruction_pointer as usize) < in_bytes.len() {
     // https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html
     // https://users.rust-lang.org/t/reference-cannot-be-written/29894/2
@@ -66,7 +62,7 @@ fn main() {
             psh(&mut memory, &mut stack_pointer, arg1);
             "ldv" },
           0x02 => {
-            break_type = const_hlt;
+            break_type = const_ok;
             "hlt" },
 
           0x11 => {
@@ -183,6 +179,11 @@ fn main() {
             arg2 = pop(&mut memory, &mut stack_pointer);
             psh(&mut memory, &mut stack_pointer, arg1 ^ arg2);
             "xor" },
+          0x34 => {
+            pop(&mut memory, &mut stack_pointer);
+            pop(&mut memory, &mut stack_pointer);
+            psh(&mut memory, &mut stack_pointer, 0);
+            "xnd" },
 
 
           _ => {
@@ -216,7 +217,7 @@ fn main() {
           }
         },
         _ => {
-          println!("Internal Error on Instruction {:x?}", in_byte);
+          println!("Invalid or Unknown Instruction {:#04x}", in_byte);
           break_type = const_unk;
           "unk" },
     };
@@ -230,7 +231,7 @@ fn main() {
     }
 
     instruction_pointer += 1;
-    if break_type > 0 { break; }
+    if break_type != const_ok { break; }
     // https://stackoverflow.com/questions/28952938/how-can-i-put-the-current-thread-to-sleep
     thread::sleep(Duration::from_millis(const_delay));
     // _pause();
