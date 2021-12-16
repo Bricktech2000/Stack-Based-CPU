@@ -10,7 +10,7 @@ fn main() {
     return;
   }
 
-  println!("Assembling Binary...");
+  println!("Running Assembler...");
 
   let in_string: String = fs::read_to_string(&args[1]).expect("Unable to read file.");
   let in_bytes: &[u8] = in_string.as_bytes();
@@ -136,10 +136,8 @@ fn main() {
     }
   }
 
-  println!("Assembly completed succsessefully.");
-  println!("Writing bytes...");
   fs::write(format!("{}{}", &args[1], ".bin"), out_bytes).expect("Unable to write file.");
-  println!("Done.");
+  println!("Process Successful.");
 }
 
 fn get_immediate(current_token: &str) -> Result<u8, usize> {

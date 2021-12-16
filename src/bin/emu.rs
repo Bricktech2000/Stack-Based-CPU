@@ -185,8 +185,8 @@ fn main() {
 
   println!("");
   if const_debug { println!("Standard output:\n{}", stdout); }
-  println!("Exit code: {:#04x}, {:#010b} ({}, {})", exit_code, exit_code, exit_code, *exit_code as i8);
   println!("CPU halted successfully.");
+  println!("Exit code: {:#04x}, {:#010b} ({}, {})", exit_code, exit_code, exit_code, *exit_code as i8);
 }
 
 fn psh(memory: &mut Vec<u8>, stack_pointer: &mut u8, value: u8) { *stack_pointer -= 1; memory[*stack_pointer as usize] = value; }
