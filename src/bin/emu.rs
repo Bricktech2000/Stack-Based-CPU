@@ -1,22 +1,26 @@
 use std::env;
 use std::fs;
 use std::{thread, time::Duration};
+use std::io;
+use std::io::prelude::*;
 
 fn main() {
   let const_mem_size: usize = 256;
   let const_delay = 50; // ms
   let const_true = 255;
   let const_false = 0;
-  let const_break_lookup: [&str; 4] = [
+  let const_break_lookup: [&str; 5] = [
     "Error: Didn't encounter halt instruction.",
     "Error: Ran into invalid instruction.",
     "Error: More than one byte on the stack.",
+    "Error: Invalid Port for instruction.",
     "Success.",
   ];
   let const_hlt = 0;
   let const_unk = 1;
   let const_stk = 2;
-  let const_ok = 3;
+  let const_inv = 3;
+  let const_ok = 4;
 
   let args: Vec<String> = env::args().collect();
   if args.len() != 2 {
@@ -33,6 +37,7 @@ fn main() {
   let mut memory: Vec<u8> = vec![0u8; const_mem_size];
   let mut stack_pointer: u8 = 0;
   let mut instruction_pointer: u8 = 0;
+  let mut stdout: String = String::new();
 
   let mut break_type = const_ok;
   while (instruction_pointer as usize) < in_bytes.len() {
@@ -64,6 +69,27 @@ fn main() {
           0x02 => {
             break_type = const_ok;
             "hlt" },
+          0x08 => {
+            arg1 = pop(&mut memory, &mut stack_pointer);
+            arg2 = pop(&mut memory, &mut stack_pointer);
+            if arg1 == 0x00 {
+              // https://stackoverflow.com/questions/59447639/rust-print-out-string-character-by-character
+              stdout.push(arg2 as char);
+              write!(io::stdout(), "{}", arg2 as char).unwrap();
+              io::stdout().flush().unwrap();
+            } else {
+              break_type = const_inv;
+            }
+            "out" },
+          0x09 => {
+            arg1 = pop(&mut memory, &mut stack_pointer);
+            if arg1 == 0x00 {
+              arg2 = io::stdin().read(&mut [0u8]).unwrap() as u8;
+              psh(&mut memory, &mut stack_pointer, arg2);
+            } else {
+              break_type = const_inv;
+            }
+            "iin" },
 
           0x11 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
@@ -239,6 +265,7 @@ fn main() {
   if break_type == const_hlt && stack_pointer != -1i8 as u8 { break_type = const_stk; }
   println!("");
   // https://newbedev.com/get-last-element-of-vector-rust-code-example
+  println!("Standard out: {}", stdout);
   println!("Exit code: {:#04x}, {:#010b} ({}, {})", memory.last().unwrap(), memory.last().unwrap(), memory.last().unwrap(), *memory.last().unwrap() as i8);
   println!("CPU Halted. {}", const_break_lookup[break_type]);
 }
@@ -250,8 +277,6 @@ fn get(memory: &mut Vec<u8>, pointer: &mut u8) -> u8 { memory[*pointer as usize]
 
 
 // https://users.rust-lang.org/t/rusts-equivalent-of-cs-system-pause/4494/3
-use std::io;
-use std::io::prelude::*;
 
 fn _pause() {
     let mut stdin = io::stdin();

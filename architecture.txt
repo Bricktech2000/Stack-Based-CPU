@@ -3,6 +3,8 @@ opcodes:
       00 : nop : no operation
       01 : x00 : load 8-bit immediate to stack
       02 : htl : halt
+      08 : out : output 8-bit immediate to port (0x00 is stdout)
+      09 : iin : input 8-bit immediate from port (0x00 is stdin)
 
       11 : lda : load value from memory address to stack
       12 : sta : store value to memory address from stack

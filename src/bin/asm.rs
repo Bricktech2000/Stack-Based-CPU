@@ -79,6 +79,13 @@ fn main() {
       "hlt" => {
         out_bytes.push(0x02);
         true },
+      "out" => {
+        out_bytes.push(0x08);
+        true },
+      "iin" => {
+        out_bytes.push(0x09);
+        true },
+
       "lda" => {
         out_bytes.push(0x11);
         true },
