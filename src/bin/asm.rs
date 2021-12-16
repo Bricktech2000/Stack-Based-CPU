@@ -24,17 +24,27 @@ fn main() {
   println!("Assembling Binary...");
 
   let in_string: String = fs::read_to_string(&args[1]).expect("Unable to read file.");
+  let in_bytes: &[u8] = in_string.as_bytes();
+  let mut mod_string: String = String::new();
   let mut out_bytes: Vec<u8> = vec![];
-  let mut in_tokens: Vec<&str> = in_string.split_whitespace().collect();
+  // let mut in_tokens: Vec<&str> = in_string.split_whitespace().collect();
 
-  let mut index: usize = 0; // TODO
   let mut last_was_offset: bool = false; // TODO
   let mut label_to_value: HashMap<String, u8> = HashMap::new();
   let mut mention_to_label: HashMap<u8, String> = HashMap::new();
 
-  for chr in in_string.chars() {
-    println!("{}", chr);
+  let mut index = 0;
+  while index <  in_bytes.len() {
+    if in_bytes[index] as char == '#' {
+      while in_bytes[index] as char != '\n' { index += 1; }
+      index += 1;
+      continue;
+    }
+    mod_string.push(in_bytes[index] as char);
+    index += 1;
   }
+  let tokens: Vec<String> = mod_string.split_whitespace().map(str::to_string).collect();
+  println!("{:?}", tokens);
 
   // while index < in_bytes.len() {
   //   let in_char: u8 = in_bytes[index];
