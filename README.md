@@ -7,5 +7,5 @@ A custom stack-based CPU architecture
 Run the following command to execute a sample program.
 
 ```bash
-clear; cargo run --bin asm src/tests/test9.asm; cargo run --bin emu src/tests/test9.asm.bin
+clear; cargo run --bin asm src/tests/test11.asm; cargo run --bin emu src/tests/test11.asm.bin
 ```
