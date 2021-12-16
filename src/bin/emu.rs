@@ -6,21 +6,10 @@ use std::io::prelude::*;
 
 fn main() {
   let const_mem_size: usize = 256;
-  let const_delay = 50; // ms
+  let const_debug = false;
+  let const_step = false;
   let const_true = 255;
   let const_false = 0;
-  let const_break_lookup: [&str; 5] = [
-    "Success.",
-    "Error: Ran into invalid instruction.",
-    "Error: More than one byte on the stack.",
-    "Error: Invalid Operand for instruction.",
-    "Error: Didn't encounter halt instruction.",
-  ];
-  let const_hlt = 0;
-  let const_unk = 1;
-  let const_stk = 2;
-  let const_inv = 3;
-  let const_ok = 4;
 
   let args: Vec<String> = env::args().collect();
   if args.len() != 2 {
@@ -36,7 +25,6 @@ fn main() {
   let mut instruction_pointer: u8 = 0;
   let mut stdout: String = String::new();
 
-  let mut break_type = const_ok;
   while (instruction_pointer as usize) < in_bytes.len() {
     let in_byte = in_bytes[instruction_pointer as usize];
 
@@ -53,39 +41,28 @@ fn main() {
             psh(&mut memory, &mut stack_pointer, value);
             "ldv"
           },
-          0x02 => {
-            // TODO
-            break_type = const_hlt;
-            "hlt"
-          },
+          0x02 => { "hlt"; break; },
           0x08 => {
             let port = pop(&mut memory, &mut stack_pointer);
             let value = pop(&mut memory, &mut stack_pointer);
             if port == 0x00 {
               stdout.push(value as char);
-              if const_delay == 0 { // TODO
+              if !const_debug {
                 write!(io::stdout(), "{}", value as char).unwrap();
                 io::stdout().flush().unwrap();
               }
-            } else {
-              // TODO
-              break_type = const_inv;
-            }
+            } else { die(0x02, instruction_pointer, port); }
             "out"
           },
           0x09 => {
             let port = pop(&mut memory, &mut stack_pointer);
             if port == 0x00 {
               let mut line: String = String::new();
-              // TODO
-              if const_delay != 0 { println!("Program is requesting byte from stdin."); }
+              if const_debug { println!("Program is requesting byte from stdin."); }
               std::io::stdin().read_line(&mut line).unwrap();
               stdout += line.as_str();
               psh(&mut memory, &mut stack_pointer, line.as_bytes()[0]);
-            } else {
-              // TODO
-              break_type = const_inv;
-            }
+            } else { die(0x02, instruction_pointer, port); }
             "iin"
           },
 
@@ -148,11 +125,7 @@ fn main() {
           0x33 => { binary_op(&mut memory, &mut stack_pointer, |a, b| a ^ b); "xor" },
           0x34 => { binary_op(&mut memory, &mut stack_pointer, |_a, _b| 0); "xnd" },
 
-          _ => {
-            // TODO
-            println!("Invalid or Unknown Instruction {:#04x}", in_byte);
-            break_type = const_unk;
-            "unk" },
+          _ => { die(0x01, instruction_pointer, in_byte); "unk" },
           }
         },
         0b01 => {
@@ -177,53 +150,35 @@ fn main() {
                 let offset = low_3_bits;
                 let condition = pop(&mut memory, &mut stack_pointer);
                 if condition == const_true { instruction_pointer += offset; }
-                else if condition != const_false {
-                  // TODO
-                  println!("Invalid Operand for Instruction {:#04x}", in_byte);
-                  break_type = const_inv;
-                }
+                else if condition != const_false { die(0x03, instruction_pointer, condition); }
                 "skp"
-              } else {
-                // TODO
-                println!("Invalid or Unknown Instruction {:#04x}", in_byte);
-                break_type = const_unk;
-                "unk"
-              }
+              } else { die(0x01, instruction_pointer, in_byte); "unk" }
             },
-            0b11 => {
-              let immediate = low_4_bits;
-              psh(&mut memory, &mut stack_pointer, immediate);
-              "ldv" },
-            _ => {
-              // TODO
-              println!("Invalid or Unknown Instruction {:#04x}", in_byte);
-              break_type = const_unk;
-              "unk" },
+            0b11 => { let immediate = low_4_bits; psh(&mut memory, &mut stack_pointer, immediate); "ldv" },
+            _ => { die(0x01, instruction_pointer, in_byte); "unk" },
           }
         },
-        _ => {
-          // TODO
-          println!("Invalid or Unknown Instruction {:#04x}", in_byte);
-          break_type = const_unk;
-          "unk" },
+        _ => { die(0x01, instruction_pointer, in_byte); "unk" },
     };
-    if const_delay != 0 {
+    if const_debug {
       println!("stack - instruction: {:02x} - {:02x}", stack_pointer, instruction_pointer);
       println!("op_code = mnemonic:  {:02x} = {}", in_byte, mnemonic);
-      println!("memory slice:        {:02x?}", memory.as_slice()[memory.len()-0x0B..].to_vec());
+      println!("stack memory slice   {:02x?}", memory.as_slice()[memory.len()-0x0B..].to_vec());
       println!("");
     }
 
     instruction_pointer += 1;
-    if break_type != const_ok { break; }
-    thread::sleep(Duration::from_millis(const_delay));
-    // _pause();
+    if const_step { pause(); }
+    else if const_debug { thread::sleep(Duration::from_millis(50)); }
   }
-  if break_type == const_hlt && stack_pointer != -1i8 as u8 { break_type = const_stk; }
+
+  if in_bytes[instruction_pointer as usize] != 0x02 { die(0x06, instruction_pointer, 0x00); }
+  if stack_pointer != -1i8 as u8 { die(0x05, instruction_pointer, stack_pointer); }
   println!("");
-  if const_delay != 0 { println!("Standard output:\n{}", stdout); }
-  println!("Exit code: {:#04x}, {:#010b} ({}, {})", memory.last().unwrap(), memory.last().unwrap(), memory.last().unwrap(), *memory.last().unwrap() as i8);
-  println!("CPU Halted. {}", const_break_lookup[break_type]);
+  if const_debug { println!("Standard output:\n{}", stdout); }
+  let exit_code = memory.last().unwrap();
+  println!("Exit code: {:#04x}, {:#010b} ({}, {})", exit_code, exit_code, exit_code, *exit_code as i8);
+  println!("CPU halted successfully.");
 }
 
 fn psh(memory: &mut Vec<u8>, stack_pointer: &mut u8, value: u8) { *stack_pointer -= 1; memory[*stack_pointer as usize] = value; }
@@ -236,20 +191,35 @@ fn binary_op<F: Fn(u8, u8) -> u8>(memory: &mut Vec<u8>, stack_pointer: &mut u8, 
   let operand2 = pop(memory, stack_pointer);
   psh(memory, stack_pointer, closure(operand1, operand2));
 }
+
 fn unary_op<F: Fn(u8) -> u8>(memory: &mut Vec<u8>, stack_pointer: &mut u8, closure: F) {
   let operand = pop(memory, stack_pointer);
   psh(memory, stack_pointer, closure(operand));
 }
 
+fn die(code: usize, instruction_pointer: u8, value: u8) {
+  let message: &str = [
+    "Success ",
+    "Invalid Instruction: ",
+    "Invalid Port: ",
+    "Invalid Boolean: ",
+    "Invalid Operand: ",
+    "Stack does not contain exit code ",
+    "Halt instruction was not reached ",
+  ][code];
+
+  println!("Fatal Error at {:02x}: {}{:02x}.", instruction_pointer, message, value);
+  println!("Exiting.");
+  std::process::exit(code as i32);
+}
+
 // https://users.rust-lang.org/t/rusts-equivalent-of-cs-system-pause/4494/3
-fn _pause() {
-    let mut stdin = io::stdin();
-    let mut stdout = io::stdout();
-
-    // We want the cursor to stay at the end of the line, so we print without a newline and flush manually.
-    write!(stdout, "Press any key to continue...").unwrap();
-    stdout.flush().unwrap();
-
-    // Read a single byte and discard
-    let _ = stdin.read(&mut [0u8]).unwrap();
+fn pause() {
+  let mut stdin = io::stdin();
+  let mut stdout = io::stdout();
+  // We want the cursor to stay at the end of the line, so we print without a newline and flush manually.
+  write!(stdout, "Press any key to continue...").unwrap();
+  stdout.flush().unwrap();
+  // Read a single byte and discard
+  let _ = stdin.read(&mut [0u8]).unwrap();
 }
