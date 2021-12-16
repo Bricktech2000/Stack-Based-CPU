@@ -46,7 +46,7 @@ opcodes:
           0 : slc : carry shift left with 3-bit-value
           1 : src : carry shift right with 3-bit-value
       0 0 : arithmetic shift
-          0 : sla : arithmetic shift left with 3-bit-value
+          0 : skp : conditional skip with 3-bit-value
           1 : sra : arithmetic shift right with 3-bit-value
       1 1 : load 4-bit immediate to stack
 

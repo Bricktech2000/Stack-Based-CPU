@@ -1,14 +1,17 @@
 use std::env;
 use std::str;
 use std::fs;
+use std::collections::HashMap;
 
 fn main() {
   let const_arg = 0;
   let const_eof = 1;
-  let const_ok = 2;
-  let const_break_lookup: [&str; 3] = [
+  let const_lbl = 2;
+  let const_ok = 3;
+  let const_break_lookup: [&str; 4] = [
     "Error.",
     "Error: Unexpected EOF.",
+    "Error: Label not found.",
     "Success.",
   ];
 
@@ -23,11 +26,14 @@ fn main() {
 
   // https://stackoverflow.com/questions/31192956/whats-the-de-facto-way-of-reading-and-writing-files-in-rust-1-x
   // https://stackoverflow.com/questions/23975391/how-to-convert-a-string-into-a-static-str
+  // https://stackoverflow.com/questions/32132218/how-do-i-transfer-ownership-of-strings
   let in_bytes: Vec<u8> = fs::read(&args[1]).expect("Unable to read file.");
   let mut out_bytes: Vec<u8> = vec![];
   let mut current_tok: String = String::new();
   let mut index: usize = 0;
   let mut last_was_offset: bool = false;
+  let mut label_to_value: HashMap<String, u8> = HashMap::new();
+  let mut mention_to_label: HashMap<u8, String> = HashMap::new();
 
   let mut break_type = const_ok;
   while index < in_bytes.len() {
@@ -186,11 +192,36 @@ fn main() {
         last_was_offset = true;
         out_bytes.push(0x80);
         true },
+      "skp" => {
+        // TODO: could overflow, see "x" | "p"
+        last_was_offset = true;
+        out_bytes.push(0xC0);
+        true },
       //shifts
 
       "#" => {
         index += 1;
         while in_bytes[index] as char != '\n' { index += 1; }
+        true },
+      "$" => {
+        let mut label: String = String::new();
+        while !" \n\t".contains(in_bytes[index + 1] as char) {
+          index += 1;
+          label.push(in_bytes[index] as char);
+        }
+        // https://doc.rust-lang.org/std/collections/struct.HashMap.html
+        out_bytes.push(0x01);
+        out_bytes.push(0xCC);
+        mention_to_label.insert(out_bytes.len() as u8 - 1, label);
+        true },
+      "lbl$" => {
+        let mut label: String = String::new();
+        while !" \n\t".contains(in_bytes[index + 1] as char) {
+          index += 1;
+          label.push(in_bytes[index] as char);
+        }
+        // https://doc.rust-lang.org/std/collections/struct.HashMap.html
+        label_to_value.insert(label, out_bytes.len() as u8);
         true },
       _ => { false },
     };
@@ -200,6 +231,18 @@ fn main() {
     index += 1;
     if break_type != const_ok { break; }
   }
+  // https://turreta.com/2019/09/11/rust-how-to-get-keys-and-values-from-hashmap/
+  // https://stackoverflow.com/questions/45724517/how-to-iterate-through-a-hashmap-print-the-key-value-and-remove-the-value-in-ru
+  // https://stackoverflow.com/questions/32132218/how-do-i-transfer-ownership-of-strings
+  for (mention, label) in mention_to_label.iter() {
+    match label_to_value.get(label) {
+      Some(value) => {
+        out_bytes[*mention as usize] = *value
+      },
+      None => { break_type = const_lbl; println!("Label {} not found.", label) }
+    }
+  }
+
   if break_type == const_ok && current_tok.len() > 0 { break_type = const_eof; }
 
   println!("Assembly complete. {}", const_break_lookup[break_type]);

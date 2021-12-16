@@ -10,11 +10,11 @@ fn main() {
   let const_true = 255;
   let const_false = 0;
   let const_break_lookup: [&str; 5] = [
-    "Error: Didn't encounter halt instruction.",
+    "Success.",
     "Error: Ran into invalid instruction.",
     "Error: More than one byte on the stack.",
-    "Error: Invalid Port for instruction.",
-    "Success.",
+    "Error: Invalid Operand for instruction.",
+    "Error: Didn't encounter halt instruction.",
   ];
   let const_hlt = 0;
   let const_unk = 1;
@@ -46,8 +46,9 @@ fn main() {
     let in_byte = in_bytes[instruction_pointer as usize];
     let bits76: u8 = (in_byte & 0b11000000) >> 6;
     let bits54: u8 = (in_byte & 0b00110000) >> 4;
-    let _bit3: u8 = (in_byte & 0b00001000) >> 3;
+    let bit3: u8 = (in_byte & 0b00001000) >> 3;
     let low_nibble: u8 = (in_byte & 0b00001111) >> 0;
+    let low_3_bits: u8 = (in_byte & 0b00000111) >> 0;
     let op_code: u8 = (in_byte & 0b00111111) >> 0;
     let mut arg1: u8;
     let mut arg2: u8;
@@ -67,7 +68,7 @@ fn main() {
             psh(&mut memory, &mut stack_pointer, arg1);
             "ldv" },
           0x02 => {
-            break_type = const_ok;
+            break_type = const_hlt;
             "hlt" },
           0x08 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
@@ -117,7 +118,7 @@ fn main() {
             "ldi" },
           0x16 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
-            instruction_pointer = arg1 + 1;
+            instruction_pointer = arg1 - 1;
             "sti" },
           0x17 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
@@ -237,6 +238,23 @@ fn main() {
         },
         0b11 => {
           match bits54 {
+            0b00 => {
+              if bit3 == 0b0 {
+                arg1 = low_3_bits;
+                arg2 = pop(&mut memory, &mut stack_pointer);
+                if arg2 == const_true { instruction_pointer += arg1; }
+                else if arg2 != const_false {
+                  println!("Invalid Operand for Instruction {:#04x}", in_byte);
+                  break_type = const_inv;
+                }
+                set(&mut memory, &mut (stack_pointer + arg1), arg2);
+                "skp"
+              } else {
+                println!("Invalid or Unknown Instruction {:#04x}", in_byte);
+                break_type = const_unk;
+                "unk"
+              }
+            },
             0b11 => {
               arg1 = low_nibble;
               psh(&mut memory, &mut stack_pointer, arg1);
