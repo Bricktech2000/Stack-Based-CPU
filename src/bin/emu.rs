@@ -44,230 +44,205 @@ fn main() {
     // https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html
     // https://users.rust-lang.org/t/reference-cannot-be-written/29894/2
     let in_byte = in_bytes[instruction_pointer as usize];
-    let bits76: u8 = (in_byte & 0b11000000) >> 6;
-    let bits54: u8 = (in_byte & 0b00110000) >> 4;
-    let bit3: u8 = (in_byte & 0b00001000) >> 3;
-    let low_nibble: u8 = (in_byte & 0b00001111) >> 0;
-    let low_3_bits: u8 = (in_byte & 0b00000111) >> 0;
-    let op_code: u8 = (in_byte & 0b00111111) >> 0;
-    let mut arg1: u8;
-    let mut arg2: u8;
-
     // https://doc.rust-lang.org/rust-by-example/primitives/literals.html
 
     // https://doc.rust-lang.org/rust-by-example/flow_control/match.html
     // https://doc.rust-lang.org/rust-by-example/fn/closures.html
-    let mnemonic = match bits76 {
+    let high_2_bits: u8 = (in_byte & 0b11000000) >> 6;
+    let low_6_bits: u8 = (in_byte & 0b00111111) >> 0;
+    let mnemonic = match high_2_bits {
       0b00 => {
+        let op_code: u8 = (in_byte & 0b00111111) >> 0;
         match op_code {
           0x00 => {
             "nop" },
           0x01 => {
             instruction_pointer += 1;
-            arg1 = in_bytes[instruction_pointer as usize];
-            psh(&mut memory, &mut stack_pointer, arg1);
+            let value = in_bytes[instruction_pointer as usize];
+            psh(&mut memory, &mut stack_pointer, value);
             "ldv" },
           0x02 => {
+            // TODO
             break_type = const_hlt;
             "hlt" },
           0x08 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            arg2 = pop(&mut memory, &mut stack_pointer);
-            if arg1 == 0x00 {
+            let port = pop(&mut memory, &mut stack_pointer);
+            let value = pop(&mut memory, &mut stack_pointer);
+            if port == 0x00 {
               // https://stackoverflow.com/questions/59447639/rust-print-out-string-character-by-character
-              stdout.push(arg2 as char);
-              if const_delay == 0 {
-                write!(io::stdout(), "{}", arg2 as char).unwrap();
+              stdout.push(value as char);
+              if const_delay == 0 { // TODO
+                write!(io::stdout(), "{}", value as char).unwrap();
                 io::stdout().flush().unwrap();
               }
             } else {
+              // TODO
               break_type = const_inv;
             }
             "out" },
           0x09 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            if arg1 == 0x00 {
+            let port = pop(&mut memory, &mut stack_pointer);
+            if port == 0x00 {
               let mut line: String = String::new();
+              // TODO
               if const_delay != 0 { println!("Program is requesting byte from stdin."); }
               std::io::stdin().read_line(&mut line).unwrap();
               stdout += line.as_str();
               psh(&mut memory, &mut stack_pointer, line.as_bytes()[0]);
             } else {
+              // TODO
               break_type = const_inv;
             }
             "iin" },
 
           0x11 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            arg2 = get(&mut memory, &mut arg1);
-            psh(&mut memory, &mut stack_pointer, arg2);
+            let mut address = pop(&mut memory, &mut stack_pointer);
+            let value = get(&mut memory, &mut address);
+            psh(&mut memory, &mut stack_pointer, value);
             "lda" },
           0x12 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            arg2 = pop(&mut memory, &mut stack_pointer);
-            set(&mut memory, &mut arg2, arg1);
+            let value = pop(&mut memory, &mut stack_pointer);
+            let mut address = pop(&mut memory, &mut stack_pointer);
+            set(&mut memory, &mut address, value);
             "sta" },
           0x13 => {
-            arg1 = stack_pointer;
-            psh(&mut memory, &mut stack_pointer, arg1);
+            let value = stack_pointer;
+            psh(&mut memory, &mut stack_pointer, value);
             "lds" },
           0x14 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            stack_pointer = arg1;
+            stack_pointer = pop(&mut memory, &mut stack_pointer);
             "sts" },
           0x15 => {
-            arg1 = instruction_pointer + 1;
-            psh(&mut memory, &mut stack_pointer, arg1);
+            psh(&mut memory, &mut stack_pointer, instruction_pointer + 1);
             "ldi" },
           0x16 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            instruction_pointer = arg1 - 1;
+            instruction_pointer = pop(&mut memory, &mut stack_pointer) - 1;
             "sti" },
           0x17 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            psh(&mut memory, &mut stack_pointer, in_bytes[arg1 as usize]);
+            let address = pop(&mut memory, &mut stack_pointer);
+            psh(&mut memory, &mut stack_pointer, in_bytes[address as usize]);
             "ldp" },
           // 0x18
           0x19 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            psh(&mut memory, &mut stack_pointer, arg1);
-            psh(&mut memory, &mut stack_pointer, arg1);
+            let value = pop(&mut memory, &mut stack_pointer);
+            psh(&mut memory, &mut stack_pointer, value);
+            psh(&mut memory, &mut stack_pointer, value);
             "dup" },
           0x1A => {
             pop(&mut memory, &mut stack_pointer);
             "drp" },
           0x1B => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            arg2 = pop(&mut memory, &mut stack_pointer);
-            psh(&mut memory, &mut stack_pointer, arg1);
-            psh(&mut memory, &mut stack_pointer, arg2);
+            let value1 = pop(&mut memory, &mut stack_pointer);
+            let value2 = pop(&mut memory, &mut stack_pointer);
+            psh(&mut memory, &mut stack_pointer, value1);
+            psh(&mut memory, &mut stack_pointer, value2);
             "swp" },
 
           0x20 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            arg2 = pop(&mut memory, &mut stack_pointer);
-            psh(&mut memory, &mut stack_pointer, arg1 + arg2);
+            binary_op(&mut memory, &mut stack_pointer, |a, b| a + b);
             "add" },
           // 0x21 adc
           0x22 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            arg2 = pop(&mut memory, &mut stack_pointer);
-            psh(&mut memory, &mut stack_pointer, arg1 - arg2);
+            binary_op(&mut memory, &mut stack_pointer, |a, b| a - b);
             "sub" },
           // 0x23 subc
           0x24 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            arg1 += 1;
-            psh(&mut memory, &mut stack_pointer, arg1);
+            unary_op(&mut memory, &mut stack_pointer, |a| a + 1);
             "inc" },
           0x25 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            arg1 -= 1;
-            psh(&mut memory, &mut stack_pointer, arg1);
+            unary_op(&mut memory, &mut stack_pointer, |a| a - 1);
             "dec" },
           0x26 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            arg2 = pop(&mut memory, &mut stack_pointer);
-            psh(&mut memory, &mut stack_pointer, if arg1 < arg2 { const_true } else { const_false });
+            binary_op(&mut memory, &mut stack_pointer, |a, b| (a < b) as u8 * const_true);
             "ilt" },
           0x27 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            arg2 = pop(&mut memory, &mut stack_pointer);
-            psh(&mut memory, &mut stack_pointer, if arg1 > arg2 { const_true } else { const_false });
+            binary_op(&mut memory, &mut stack_pointer, |a, b| (a > b) as u8 * const_true);
             "igt" },
           0x28 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            arg2 = pop(&mut memory, &mut stack_pointer);
-            psh(&mut memory, &mut stack_pointer, if arg1 == arg2 { const_true } else { const_false });
+            binary_op(&mut memory, &mut stack_pointer, |a, b| (a == b) as u8 * const_true);
             "ieq" },
           0x29 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            arg2 = 0;
-            psh(&mut memory, &mut stack_pointer, if arg1 != arg2 { const_true } else { const_false });
+            unary_op(&mut memory, &mut stack_pointer, |a| (a == 0) as u8 * const_true);
             "nez" },
           0x2A => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            psh(&mut memory, &mut stack_pointer, -(arg1 as i8) as u8);
+            unary_op(&mut memory, &mut stack_pointer, |a| -(a as i8) as u8);
             "not" },
           0x2B => {
             // https://stackoverflow.com/questions/27182808/how-do-i-get-an-absolute-value-in-rust/55944670
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            psh(&mut memory, &mut stack_pointer, (arg1 as i8).abs() as u8);
-            "not" },
+            unary_op(&mut memory, &mut stack_pointer, |a| (a as i8).abs() as u8);
+            "abs" },
 
           0x30 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            psh(&mut memory, &mut stack_pointer, !arg1);
+            unary_op(&mut memory, &mut stack_pointer, |a| !a);
             "not" },
           0x31 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            arg2 = pop(&mut memory, &mut stack_pointer);
-            psh(&mut memory, &mut stack_pointer, arg1 | arg2);
+            binary_op(&mut memory, &mut stack_pointer, |a, b| a | b);
             "oor" },
           0x32 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            arg2 = pop(&mut memory, &mut stack_pointer);
-            psh(&mut memory, &mut stack_pointer, arg1 & arg2);
+            binary_op(&mut memory, &mut stack_pointer, |a, b| a & b);
             "and" },
           0x33 => {
-            arg1 = pop(&mut memory, &mut stack_pointer);
-            arg2 = pop(&mut memory, &mut stack_pointer);
-            psh(&mut memory, &mut stack_pointer, arg1 ^ arg2);
+            binary_op(&mut memory, &mut stack_pointer, |a, b| a ^ b);
             "xor" },
           0x34 => {
-            pop(&mut memory, &mut stack_pointer);
-            pop(&mut memory, &mut stack_pointer);
-            psh(&mut memory, &mut stack_pointer, 0);
+            binary_op(&mut memory, &mut stack_pointer, |_a, _b| 0);
             "xnd" },
 
-
           _ => {
+            // TODO
             println!("Invalid or Unknown Instruction {:#04x}", in_byte);
             break_type = const_unk;
             "unk" },
           }
         },
         0b01 => {
-          arg1 = op_code;
-          arg2 = pop(&mut memory, &mut stack_pointer);
-          set(&mut memory, &mut (stack_pointer + arg1), arg2);
-          "sto"
-        },
+          let offset = low_6_bits;
+          let value = pop(&mut memory, &mut stack_pointer);
+          set(&mut memory, &mut (stack_pointer + offset), value);
+          "sto" },
         0b10 => {
-          arg1 = op_code;
-          arg2 = get(&mut memory, &mut (stack_pointer + arg1));
-          psh(&mut memory, &mut stack_pointer, arg2);
-          "ldo"
-        },
+          let offset = low_6_bits;
+          let value = get(&mut memory, &mut (stack_pointer + offset));
+          psh(&mut memory, &mut stack_pointer, value);
+          "ldo" },
         0b11 => {
-          match bits54 {
+          let bit3: u8 = (in_byte & 0b00001000) >> 3;
+          let low_3_bits: u8 = (in_byte & 0b00000111) >> 0;
+          let low_4_bits: u8 = (in_byte & 0b00001111) >> 0;
+
+          let mid_2_bits: u8 = (in_byte & 0b00110000) >> 4;
+          match mid_2_bits {
             0b00 => {
               if bit3 == 0b0 {
-                arg1 = low_3_bits;
-                arg2 = pop(&mut memory, &mut stack_pointer);
-                if arg2 == const_true { instruction_pointer += arg1; }
-                else if arg2 != const_false {
+                let offset = low_3_bits;
+                let condition = pop(&mut memory, &mut stack_pointer);
+                if condition == const_true { instruction_pointer += offset; }
+                else if condition != const_false {
+                  // TODO
                   println!("Invalid Operand for Instruction {:#04x}", in_byte);
                   break_type = const_inv;
                 }
                 "skp"
               } else {
+                // TODO
                 println!("Invalid or Unknown Instruction {:#04x}", in_byte);
                 break_type = const_unk;
                 "unk"
               }
             },
             0b11 => {
-              arg1 = low_nibble;
-              psh(&mut memory, &mut stack_pointer, arg1);
+              let immediate = low_4_bits;
+              psh(&mut memory, &mut stack_pointer, immediate);
               "ldv" },
             _ => {
+              // TODO
               println!("Invalid or Unknown Instruction {:#04x}", in_byte);
               break_type = const_unk;
               "unk" },
           }
         },
         _ => {
+          // TODO
           println!("Invalid or Unknown Instruction {:#04x}", in_byte);
           break_type = const_unk;
           "unk" },
@@ -300,6 +275,16 @@ fn pop(memory: &mut Vec<u8>, stack_pointer: &mut u8) -> u8 { let temp: u8 = memo
 fn set(memory: &mut Vec<u8>, pointer: &mut u8, value: u8) { memory[*pointer as usize] = value; }
 fn get(memory: &mut Vec<u8>, pointer: &mut u8) -> u8 { memory[*pointer as usize] }
 
+// https://stackoverflow.com/questions/31091846/cannot-pass-closure-as-parameter
+fn binary_op<F: Fn(u8, u8) -> u8>(memory: &mut Vec<u8>, stack_pointer: &mut u8, closure: F) {
+  let operand1 = pop(memory, stack_pointer);
+  let operand2 = pop(memory, stack_pointer);
+  psh(memory, stack_pointer, closure(operand1, operand2));
+}
+fn unary_op<F: Fn(u8) -> u8>(memory: &mut Vec<u8>, stack_pointer: &mut u8, closure: F) {
+  let operand = pop(memory, stack_pointer);
+  psh(memory, stack_pointer, closure(operand));
+}
 
 // https://users.rust-lang.org/t/rusts-equivalent-of-cs-system-pause/4494/3
 
