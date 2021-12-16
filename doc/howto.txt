@@ -22,6 +22,8 @@ https://stackoverflow.com/questions/45724517/how-to-iterate-through-a-hashmap-pr
 https://stackoverflow.com/questions/32132218/how-do-i-transfer-ownership-of-strings
 https://doc.rust-lang.org/rust-by-example/flow_control/for.html
 https://doc.rust-lang.org/rust-by-example/types/cast.html
+https://stackoverflow.com/questions/31192956/whats-the-de-facto-way-of-reading-and-writing-files-in-rust-1-x
+https://stackoverflow.com/questions/26643688/how-do-i-split-a-string-in-rust
 
 emu:
 https://doc.rust-lang.org/std/primitive.array.html
