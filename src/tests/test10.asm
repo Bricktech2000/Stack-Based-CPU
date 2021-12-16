@@ -1,4 +1,4 @@
-# send Hello World to stdout
+# sends Hello World to stdout
 
 # load string literal to stack followed by length
 x0A x21 x64 x6C x72 x6F x57 x20 x6F x6C x6C x65 x48 x0D

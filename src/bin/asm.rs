@@ -48,7 +48,7 @@ fn main() {
     // https://stackoverflow.com/questions/19076719/how-do-i-convert-a-vector-of-bytes-u8-to-a-string
     // https://stackoverflow.com/questions/25383488/how-to-match-a-string-against-string-literals
     let matched: bool = match current_tok.as_str() {
-      "x" => {
+      "x" | "p" => {
         // github copilot magic
         let mut hex_str: String = String::new();
         index += 1;
@@ -57,19 +57,23 @@ fn main() {
         hex_str.push(in_bytes[index] as char);
         // https://stackoverflow.com/questions/32381414/converting-a-hexadecimal-string-to-a-decimal-integer
         let hex_num = u8::from_str_radix(hex_str.as_str(), 16).expect("Unable to parse hex.");
-        if last_was_offset {
-          last_was_offset = false;
-          if hex_num < 0x40 {
-            let instruction = out_bytes.pop().unwrap();
-            out_bytes.push(instruction | hex_num);
+        if current_tok.as_str() == "x" {
+          if last_was_offset {
+            last_was_offset = false;
+            if hex_num < 0x40 {
+              let instruction = out_bytes.pop().unwrap();
+              out_bytes.push(instruction | hex_num);
+            } else {
+              println!("Error: Invalid argument {} for instruction.", hex_num);
+              break_type = const_arg;
+            }
+          } else if hex_num < 0x10 {
+            out_bytes.push(0xF0 | hex_num);
           } else {
-            println!("Error: Invalid argument {} for instruction.", hex_num);
-            break_type = const_arg;
+            out_bytes.push(0x01);
+            out_bytes.push(hex_num);
           }
-        } else if hex_num < 0x10 {
-          out_bytes.push(0xF0 | hex_num);
         } else {
-          out_bytes.push(0x01);
           out_bytes.push(hex_num);
         }
         true },
@@ -92,10 +96,10 @@ fn main() {
       "sta" => {
         out_bytes.push(0x12);
         true },
-      "ldp" => {
+      "lds" => {
         out_bytes.push(0x13);
         true },
-      "stp" => {
+      "sts" => {
         out_bytes.push(0x14);
         true },
       "ldi" => {
@@ -104,8 +108,13 @@ fn main() {
       "sti" => {
         out_bytes.push(0x16);
         true },
-      //"ldc"
-      //"stc" => {
+      "ldp" => {
+        out_bytes.push(0x17);
+        true },
+      "stp" => {
+        out_bytes.push(0x18);
+        true },
+
       "dup" => {
         out_bytes.push(0x19);
         true },

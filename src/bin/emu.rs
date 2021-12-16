@@ -75,8 +75,10 @@ fn main() {
             if arg1 == 0x00 {
               // https://stackoverflow.com/questions/59447639/rust-print-out-string-character-by-character
               stdout.push(arg2 as char);
-              write!(io::stdout(), "{}", arg2 as char).unwrap();
-              io::stdout().flush().unwrap();
+              if const_delay == 0 {
+                write!(io::stdout(), "{}", arg2 as char).unwrap();
+                io::stdout().flush().unwrap();
+              }
             } else {
               break_type = const_inv;
             }
@@ -104,11 +106,11 @@ fn main() {
           0x13 => {
             arg1 = stack_pointer;
             psh(&mut memory, &mut stack_pointer, arg1);
-            "ldp" },
+            "lds" },
           0x14 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
             stack_pointer = arg1;
-            "stp" },
+            "sts" },
           0x15 => {
             arg1 = instruction_pointer + 1;
             psh(&mut memory, &mut stack_pointer, arg1);
@@ -117,8 +119,11 @@ fn main() {
             arg1 = pop(&mut memory, &mut stack_pointer);
             instruction_pointer = arg1 + 1;
             "sti" },
-          // 0x17 ldc
-          // 0x18 stc
+          0x17 => {
+            arg1 = pop(&mut memory, &mut stack_pointer);
+            psh(&mut memory, &mut stack_pointer, in_bytes[arg1 as usize]);
+            "ldp" },
+          // 0x18
           0x19 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
             psh(&mut memory, &mut stack_pointer, arg1);
