@@ -1,41 +1,41 @@
 opcodes:
   0 0 :
-      00 : nop : no operation
-      01 : x00 : load 8-bit immediate to stack
-      02 : htl : halt
-      08 : out : output 8-bit immediate to port (0x00 is stdout)
-      09 : iin : input 8-bit immediate from port (0x00 is stdin)
+      0x00 : nop : no operation
+      0x01 : x00 : load 8-bit immediate to stack
+      0x02 : htl : halt
+      0x08 : out : output 8-bit immediate to port (0x00 is stdout)
+      0x09 : iin : input 8-bit immediate from port (0x00 is stdin)
 
-      11 : lda : load value from memory address to stack
-      12 : sta : store value to memory address from stack
-      13 : lds : load stack pointer to stack
-      14 : sts : store stack pointer from stack
-      15 : ldi : load instruction pointer to stack
-      16 : sti : store instruction pointer from stack
-      17 : ldp : load from program memory to stack
-      18 : stp : store to program memory from  stack
-      19 : dup : duplicate value on stack
-      1A : drp : drop value from stack
-      1B : swp : swap two values on stack
+      0x11 : lda : load value from memory address to stack
+      0x12 : sta : store value to memory address from stack
+      0x13 : lds : load stack pointer to stack
+      0x14 : sts : store stack pointer from stack
+      0x15 : ldi : load instruction pointer to stack
+      0x16 : sti : store instruction pointer from stack
+      0x17 : ldp : load from program memory to stack
+      0x18 : stp : store to program memory from  stack
+      0x19 : dup : duplicate value on stack
+      0x1A : drp : drop value from stack
+      0x1B : swp : swap two values on stack
 
-      20 : add : addition
-      21 : adc : addition with carry
-      22 : sub : subtraction
-      23 : sbc : subtraction with borrow
-      24 : inc : increment
-      25 : dec : decrement
-      26 : ilt : is less than
-      27 : igt : is greater than
-      28 : ieq : is equal
-      29 : nez : is not equal to zero
-      2A : neg : signed negation
-      2B : abs : signed absolute value
+      0x20 : add : addition
+      0x21 : adc : addition with carry
+      0x22 : sub : subtraction
+      0x23 : sbc : subtraction with borrow
+      0x24 : inc : increment
+      0x25 : dec : decrement
+      0x26 : ilt : is less than
+      0x27 : igt : is greater than
+      0x28 : ieq : is equal
+      0x29 : nez : is not equal to zero
+      0x2A : neg : signed negation
+      0x2B : abs : signed absolute value
 
-      30 : not : bitwise not
-      31 : oor : bitwise or
-      32 : and : bitwise and
-      33 : xor : bitwise exclusive or
-      34 : xnd : bitwise exclusive and
+      0x30 : not : bitwise not
+      0x31 : oor : bitwise or
+      0x32 : and : bitwise and
+      0x33 : xor : bitwise exclusive or
+      0x34 : xnd : bitwise exclusive and
   0 1 : sto : store to offset from stack pointer
   1 0 : ldo : load from offset from stack pointer
   1 1 :
@@ -51,11 +51,9 @@ opcodes:
       1 1 : load 4-bit immediate to stack
 
 
-true:
-  1 1 1 1 1 1 1 1
+true: 0xFF
 
-false:
-  0 0 0 0 0 0 0 0
+false: 0x00
 
 
 other (not implemented yet):

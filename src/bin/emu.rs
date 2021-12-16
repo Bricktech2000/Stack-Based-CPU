@@ -6,10 +6,10 @@ use std::io::prelude::*;
 
 fn main() {
   let const_mem_size: usize = 256;
-  let const_debug = false;
-  let const_step = false;
-  let const_true = 255;
-  let const_false = 0;
+  let const_debug = false; // whether to show debug statements
+  let const_step = false; // whether to step through the program manually
+  let const_true = 255; // value of true
+  let const_false = 0; // value of false
 
   let args: Vec<String> = env::args().collect();
   if args.len() != 2 {
@@ -20,10 +20,10 @@ fn main() {
   println!("Emulating CPU...");
 
   let in_bytes: Vec<u8> = fs::read(&args[1]).expect("Unable to read file.");
-  let mut memory: Vec<u8> = vec![0u8; const_mem_size];
-  let mut stack_pointer: u8 = 0;
-  let mut instruction_pointer: u8 = 0;
-  let mut stdout: String = String::new();
+  let mut memory: Vec<u8> = vec![0u8; const_mem_size]; // program RAM
+  let mut stack_pointer: u8 = 0; // CPU stack pointer
+  let mut instruction_pointer: u8 = 0; // CPU instruction pointer
+  let mut stdout: String = String::new(); // stdout buffer for debugging
 
   while (instruction_pointer as usize) < in_bytes.len() {
     let in_byte = in_bytes[instruction_pointer as usize];
@@ -31,6 +31,7 @@ fn main() {
     let high_2_bits: u8 = (in_byte & 0b11000000) >> 6;
     let low_6_bits: u8 = (in_byte & 0b00111111) >> 0;
     let mnemonic = match high_2_bits {
+      // normal instruction operating on the stack
       0b00 => {
         let op_code: u8 = (in_byte & 0b00111111) >> 0;
         match op_code {
@@ -128,6 +129,7 @@ fn main() {
           _ => { die(0x01, instruction_pointer, in_byte); "unk" },
           }
         },
+        // instructions operating with a 6-bit operand
         0b01 => {
           let offset = low_6_bits;
           let value = pop(&mut memory, &mut stack_pointer);
@@ -138,6 +140,7 @@ fn main() {
           let value = get(&mut memory, &mut (stack_pointer + offset));
           psh(&mut memory, &mut stack_pointer, value);
           "ldo" },
+        // instructions operating with a 3- and 4-bit operand
         0b11 => {
           let bit3: u8 = (in_byte & 0b00001000) >> 3;
           let low_3_bits: u8 = (in_byte & 0b00000111) >> 0;
@@ -168,15 +171,20 @@ fn main() {
     }
 
     instruction_pointer += 1;
+
+    // delay the execution of the instructions if debug is enabled
     if const_step { pause(); }
     else if const_debug { thread::sleep(Duration::from_millis(50)); }
   }
 
+  // make sure we reached a halt instruction
   if in_bytes[instruction_pointer as usize] != 0x02 { die(0x06, instruction_pointer, 0x00); }
+  // make sure only one value is left on the stack
   if stack_pointer != -1i8 as u8 { die(0x05, instruction_pointer, stack_pointer); }
+  let exit_code = memory.last().unwrap();
+
   println!("");
   if const_debug { println!("Standard output:\n{}", stdout); }
-  let exit_code = memory.last().unwrap();
   println!("Exit code: {:#04x}, {:#010b} ({}, {})", exit_code, exit_code, exit_code, *exit_code as i8);
   println!("CPU halted successfully.");
 }
