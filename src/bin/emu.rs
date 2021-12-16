@@ -87,8 +87,11 @@ fn main() {
           0x09 => {
             arg1 = pop(&mut memory, &mut stack_pointer);
             if arg1 == 0x00 {
-              arg2 = io::stdin().read(&mut [0u8]).unwrap() as u8;
-              psh(&mut memory, &mut stack_pointer, arg2);
+              let mut line: String = String::new();
+              if const_delay != 0 { println!("Program is requesting byte from stdin."); }
+              std::io::stdin().read_line(&mut line).unwrap();
+              stdout += line.as_str();
+              psh(&mut memory, &mut stack_pointer, line.as_bytes()[0]);
             } else {
               break_type = const_inv;
             }
@@ -247,7 +250,6 @@ fn main() {
                   println!("Invalid Operand for Instruction {:#04x}", in_byte);
                   break_type = const_inv;
                 }
-                set(&mut memory, &mut (stack_pointer + arg1), arg2);
                 "skp"
               } else {
                 println!("Invalid or Unknown Instruction {:#04x}", in_byte);
@@ -288,7 +290,7 @@ fn main() {
   if break_type == const_hlt && stack_pointer != -1i8 as u8 { break_type = const_stk; }
   println!("");
   // https://newbedev.com/get-last-element-of-vector-rust-code-example
-  println!("Standard out: {}", stdout);
+  if const_delay != 0 { println!("Standard output:\n{}", stdout); }
   println!("Exit code: {:#04x}, {:#010b} ({}, {})", memory.last().unwrap(), memory.last().unwrap(), memory.last().unwrap(), *memory.last().unwrap() as i8);
   println!("CPU Halted. {}", const_break_lookup[break_type]);
 }
