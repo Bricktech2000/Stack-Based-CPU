@@ -4,17 +4,6 @@ use std::fs;
 use std::collections::HashMap;
 
 fn main() {
-  let const_arg = 0;
-  let const_eof = 1;
-  let const_lbl = 2;
-  let const_ok = 3;
-  let const_break_lookup: [&str; 4] = [
-    "Error.",
-    "Error: Unexpected EOF.",
-    "Error: Label not found.",
-    "Success.",
-  ];
-
   let args: Vec<String> = env::args().collect();
   if args.len() != 2 {
     println!("Usage: asm <filename>");
@@ -25,15 +14,15 @@ fn main() {
 
   let in_string: String = fs::read_to_string(&args[1]).expect("Unable to read file.");
   let in_bytes: &[u8] = in_string.as_bytes();
-  let mut mod_string: String = String::new();
   let mut out_bytes: Vec<u8> = vec![];
-  // let mut in_tokens: Vec<&str> = in_string.split_whitespace().collect();
 
-  let mut last_was_offset: bool = false; // TODO
+  // used to resolve labels
   let mut label_to_value: HashMap<String, u8> = HashMap::new();
   let mut mention_to_label: HashMap<u8, String> = HashMap::new();
 
+  // filter out comments
   let mut index = 0;
+  let mut mod_string: String = String::new();
   while index <  in_bytes.len() {
     if in_bytes[index] as char == '#' {
       while in_bytes[index] as char != '\n' { index += 1; }
@@ -43,11 +32,11 @@ fn main() {
     mod_string.push(in_bytes[index] as char);
     index += 1;
   }
+  // split into individual tokens
   let tokens: Vec<String> = mod_string.split_whitespace().map(str::to_string).collect();
 
   index = 0;
   while index < tokens.len() {
-    println!("{:?}", tokens[index]);
     let current_token: &str = tokens[index].as_str();
 
     match current_token {
@@ -64,7 +53,6 @@ fn main() {
       "sti" => { out_bytes.push(0x16) },
       "ldp" => { out_bytes.push(0x17) },
       "stp" => { out_bytes.push(0x18) },
-
       "dup" => { out_bytes.push(0x19) },
       "drp" => { out_bytes.push(0x1A) },
       "swp" => { out_bytes.push(0x1B) },
@@ -140,6 +128,7 @@ fn main() {
     };
     index += 1;
   }
+  // resolve labels
   for (mention, label) in mention_to_label.iter() {
     match label_to_value.get(label) {
       Some(value) => out_bytes[*mention as usize] = *value,
