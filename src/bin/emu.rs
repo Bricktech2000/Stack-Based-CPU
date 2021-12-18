@@ -1,6 +1,5 @@
 use std::env;
 use std::fs;
-use std::thread;
 use std::io;
 use std::io::prelude::*;
 use std::time::{Duration, Instant};
@@ -32,7 +31,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
   let mut memory: Vec<u8> = vec![0u8; const_mem_size]; // program RAM
   let mut display_buffer: Vec<u8> = vec![0u8; const_mem_size]; // display buffer
   let mut stack_pointer: u8 = 0; // CPU stack pointer
-  let mut instruction_pointer: u8 = 0; // CPU instruction pointer
+  let mut instruction_pointer: u16 = 0; // CPU instruction pointer
   let mut stdout: String = String::new(); // stdout buffer for debugging
   let mut last_display_or_stdout_update = Instant::now(); // las time the display buffer or stdout was updated
 
@@ -54,6 +53,12 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
             "xXX"
           },
           0x02 => { "hlt"; break; },
+          0x03 => {
+            instruction_pointer += 2;
+            psh(&mut memory, &mut stack_pointer, in_bytes[instruction_pointer as usize] as u8);
+            psh(&mut memory, &mut stack_pointer, in_bytes[instruction_pointer as usize - 1] as u8);
+            "xXX xXX"
+          },
           0x0F => {
             const_debug = true;
             const_step = true;
@@ -77,15 +82,22 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
             let mut address = pop(&mut memory, &mut stack_pointer);
             let value = pop(&mut memory, &mut stack_pointer);
             if address == 0xFF { stdout.push(value as char); }
-            set(&mut memory, &mut address, value);
+            else { set(&mut memory, &mut address, value); }
             "sta"
           },
           0x13 => { let value = stack_pointer; psh(&mut memory, &mut stack_pointer, value); "lds" },
           0x14 => { stack_pointer = pop(&mut memory, &mut stack_pointer); "sts" },
-          0x15 => { psh(&mut memory, &mut stack_pointer, instruction_pointer + 1); "ldi" },
-          0x16 => { instruction_pointer = pop(&mut memory, &mut stack_pointer) - 1; "sti" },
+          0x15 => {
+            psh(&mut memory, &mut stack_pointer, ((instruction_pointer + 1) >> 8) as u8);
+            psh(&mut memory, &mut stack_pointer, ((instruction_pointer + 1) & 0xFF) as u8);
+            "ldi"
+          },
+          0x16 => {
+            instruction_pointer = (pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8) - 1;
+            "sti"
+          },
           0x17 => {
-            let address = pop(&mut memory, &mut stack_pointer);
+            let address = pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8;
             psh(&mut memory, &mut stack_pointer, in_bytes[address as usize]);
             "ldp"
           },
@@ -112,24 +124,6 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
             pop(&mut memory, &mut stack_pointer);
             "drp"
           },
-          0x05 => {
-            pop(&mut memory, &mut stack_pointer);
-            pop(&mut memory, &mut stack_pointer);
-            "dr2"
-          },
-          0x03 => {
-            pop(&mut memory, &mut stack_pointer);
-            pop(&mut memory, &mut stack_pointer);
-            pop(&mut memory, &mut stack_pointer);
-            "dr3"
-          },
-          0x04 => {
-            pop(&mut memory, &mut stack_pointer);
-            pop(&mut memory, &mut stack_pointer);
-            pop(&mut memory, &mut stack_pointer);
-            pop(&mut memory, &mut stack_pointer);
-            "dr4"
-          },
           0x1D => {
             let value1 = pop(&mut memory, &mut stack_pointer);
             let value2 = pop(&mut memory, &mut stack_pointer);
@@ -139,6 +133,14 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
           },
 
           0x20 => { binary_op(&mut memory, &mut stack_pointer, |a, b| a + b); "add" },
+          0x21 => {
+            let operand1 = pop(&mut memory, &mut stack_pointer) as u16;
+            let operand2 = (pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8) - 1;
+            let result = operand1 + operand2;
+            psh(&mut memory, &mut stack_pointer, ((result + 1) >> 8) as u8);
+            psh(&mut memory, &mut stack_pointer, ((result + 1) & 0xFF) as u8);
+            "ada"
+          }, // TEMPORARY
           // 0x21 adc
           0x22 => { binary_op(&mut memory, &mut stack_pointer, |a, b| a - b); "sub" },
           // 0x23 subc
@@ -184,7 +186,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
                 0b0 => {
                   let offset = low_3_bits;
                   let condition = pop(&mut memory, &mut stack_pointer);
-                  if condition == const_true { instruction_pointer += offset; }
+                  if condition == const_true { instruction_pointer += offset as u16; }
                   else if condition != const_false { die(0x03, instruction_pointer, condition); }
                   "skp"
                 },
@@ -217,12 +219,12 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
         },
         _ => { die(0x01, instruction_pointer, in_byte); "unk" },
     };
-    if last_display_or_stdout_update.elapsed() > Duration::from_millis(1000 / 30) { // ms
+    if last_display_or_stdout_update.elapsed() > Duration::from_millis(1000 / 10) { // ms
       last_display_or_stdout_update = Instant::now();
       print_display_and_stdout(&display_buffer, &stdout);
     }
     if const_debug {
-      println!("stack - instruction: {:02x} - {:02x}", stack_pointer, instruction_pointer);
+      println!("stack - instruction: {:02x} - {:04x}", stack_pointer, instruction_pointer);
       println!("op_code = mnemonic:  {:02x} = {}", in_byte, mnemonic);
       println!("stack memory slice   {:02x?}", memory.as_slice()[memory.len()-0x18..].to_vec());
       println!("hex stdout: {:02x?}", stdout.as_bytes());
@@ -286,7 +288,7 @@ fn print_display_and_stdout(display_buffer: &Vec<u8>, stdout: &String) {
   println!("Standard output:\n{}", stdout);
 }
 
-fn die(code: usize, instruction_pointer: u8, value: u8) {
+fn die(code: usize, instruction_pointer: u16, value: u8) {
   let message: &str = [
     "Success ",
     "Invalid Instruction: ",

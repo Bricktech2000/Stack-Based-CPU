@@ -37,20 +37,23 @@ fn assemble(in_string: &String) -> Vec<u8> {
   // split into individual tokens
   let tokens: Vec<&str> = mod_string.split_whitespace().collect();
   // used to resolve labels
-  let mut label_to_value: HashMap<String, u8> = HashMap::new();
-  let mut mention_to_label: HashMap<u8, String> = HashMap::new();
+  let mut label_to_value: HashMap<String, u16> = HashMap::new();
+  let mut mention_to_label: HashMap<u16, String> = HashMap::new();
   let mut out_bytes = assemble_recursive(tokens, 0x00, &mut label_to_value, &mut mention_to_label);
   // resolve labels
   for (mention, label) in mention_to_label.iter() {
     match label_to_value.get(label) {
-      Some(value) => out_bytes[*mention as usize] = *value,
+      Some(value) => {
+        out_bytes[(*mention + 0) as usize] = (*value & 0xFF) as u8;
+        out_bytes[(*mention + 1) as usize] = (*value >> 8) as u8;
+      },
       None => die(0x04, label),
     }
   }
   out_bytes
 }
 
-fn assemble_recursive(tokens: Vec<&str>, offset: usize, label_to_value: &mut HashMap<String, u8>, mention_to_label: &mut HashMap<u8, String>) -> Vec<u8> {
+fn assemble_recursive(tokens: Vec<&str>, offset: usize, label_to_value: &mut HashMap<String, u16>, mention_to_label: &mut HashMap<u16, String>) -> Vec<u8> {
   let mut index = 0;
   let mut out_bytes: Vec<u8> = vec![];
   while index < tokens.len() {
@@ -60,8 +63,9 @@ fn assemble_recursive(tokens: Vec<&str>, offset: usize, label_to_value: &mut Has
       "nop" => { out_bytes.push(0x00) },
       "hlt" => { out_bytes.push(0x02) },
       "dbg" => { out_bytes.push(0x0F) },
-      "jms" => { index += 1; out_bytes.append(&mut assemble_recursive(vec!["ldi", "x05", "add", tokens[index], "sti"], out_bytes.len(), label_to_value, mention_to_label)) },
+      "jms" => { index += 1; out_bytes.append(&mut assemble_recursive(vec!["ldi", "x06", "ada", tokens[index], "sti"], out_bytes.len(), label_to_value, mention_to_label)) },
       "rts" => { out_bytes.append(&mut assemble_recursive(vec!["sti"], out_bytes.len(), label_to_value, mention_to_label)) },
+      "for" => { index += 1; out_bytes.append(&mut assemble_recursive(vec!["inc", "dup", tokens[index], "ieq", "skp", "x04"], out_bytes.len(), label_to_value, mention_to_label)) },
 
       "lda" => { out_bytes.push(0x11) },
       "sta" => { out_bytes.push(0x12) },
@@ -78,7 +82,7 @@ fn assemble_recursive(tokens: Vec<&str>, offset: usize, label_to_value: &mut Has
       "swp" => { out_bytes.push(0x1D) },
 
       "add" => { out_bytes.push(0x20) },
-      "adc" => { out_bytes.push(0x21) },
+      "adc" | "ada" => { out_bytes.push(0x21) }, // TEMPORARY
       "sub" => { out_bytes.push(0x22) },
       "sbc" => { out_bytes.push(0x23) },
       "inc" => { out_bytes.push(0x24) },
@@ -120,12 +124,13 @@ fn assemble_recursive(tokens: Vec<&str>, offset: usize, label_to_value: &mut Has
       "lbl" => {
         index += 1;
         let current_token = tokens[index];
-        label_to_value.insert(current_token.to_string(), (offset + out_bytes.len()) as u8);
+        label_to_value.insert(current_token.to_string(), (offset + out_bytes.len()) as u16);
       },
       _ if current_token.starts_with("$") => {
-        out_bytes.push(0x01);
+        out_bytes.push(0x03);
         out_bytes.push(0xCC);
-        mention_to_label.insert((offset + out_bytes.len()) as u8 - 1, current_token.to_string());
+        out_bytes.push(0xCC);
+        mention_to_label.insert((offset + out_bytes.len()) as u16 - 2, current_token.to_string());
       },
       _ if current_token.starts_with("x") => {
         match get_immediate(current_token) {

@@ -3,6 +3,7 @@ opcodes:
       0x00 : nop : no operation
       0x01 : x00 : load 8-bit immediate to stack
       0x02 : hlt : halt and return value on top of the stack
+      0x03 : x00 x00 : load 16-bit immediate to stack
       0x0F : dbg : enable emulator step-by-step debugging
 
       0x11 : lda : load value from memory address to stack (0xFF is stdin)
@@ -20,6 +21,7 @@ opcodes:
       0x1D : swp : swap two values on stack
 
       0x20 : add : addition
+      0x21 : ada : TEMPORARY HACK - 16-bit addition
       0x21 : adc : addition with carry
       0x22 : sub : subtraction
       0x23 : sbc : subtraction with borrow
