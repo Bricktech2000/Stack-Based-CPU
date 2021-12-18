@@ -4,20 +4,67 @@
 # x00 x00 x04 x05 jms $GET_ENCODED drp drp drp
 # drp
 # x01 hlt
+# xFF x00
+# x04 x03 jms $SET_ENCODED drp drp
+# x05 x04 jms $SET_ENCODED drp drp
+# x05 x05 jms $SET_ENCODED drp drp
+# x04 x05 jms $SET_ENCODED drp drp
+# x03 x05 jms $SET_ENCODED drp drp
+# drp drp
+xFF x04 sta
 
-x00
+# x00
+# lbl $MAIN_LOOP_STEP
+
+x01
 lbl $MAIN_LOOP_Y
-x00
+x01
 lbl $MAIN_LOOP_X
-ldo x00 ldo x02
+
+x00 # allocate room for neighbor count
+
+xFF
+lbl $MAIN_LOOP_DY
+xFF
+lbl $MAIN_LOOP_DX
+# dup ldo x02 oor nez skp x03 $MAIN_SKIP_DY sti
+# ldo x02
+# x00 x00 ldo x03 ldo x07 add ldo x05 ldo x09 add jms $GET_ENCODED drp drp drp
+# neg add sto x02
+# lbl $MAIN_SKIP_DY
+inc dup x02 ieq skp x03 $MAIN_LOOP_DX sti
+drp
+inc dup x02 ieq skp x03 $MAIN_LOOP_DY sti
+drp
+# # x00 x00 ldo x03 ldo x05 jms $GET_ENCODED drp drp drp sub
+# nez not skp x01 dbg
+
+# ldo x02 x03 ieq x20 ldo x03 ldo x05
+# ldo x06 x02 ieq skp x06 jms $SET_ENCODED
+# drp drp drp drp
+
+ldo x01 ldo x03
 jms $DRAW_CELL
 drp drp
-inc dup x10 ieq skp x03 $MAIN_LOOP_X sti
+
+drp # deallocate room for neighbor count
+inc dup x0F ieq skp x03 $MAIN_LOOP_X sti
 drp
-inc dup x10 ieq skp x03 $MAIN_LOOP_Y sti
+inc dup x0F ieq skp x03 $MAIN_LOOP_Y sti
 drp
 
+# x00
+# lbl $MAIN_LOOP_N
+# dup x20 add lda ldo x01 sta
+# inc dup x20 ieq skp x03 $MAIN_LOOP_N sti
+# drp
+
+# inc dup xFF ieq skp x03 $MAIN_LOOP_STEP sti
+# inc $MAIN_LOOP_STEP sti
+# drp
+
 x00 hlt
+
 
 lbl $DRAW_CELL # draw_cell(x, y); x < 0x10, y < 0x10
 # draws a 2x2 square at x, y in the display buffer
@@ -33,17 +80,18 @@ lbl $GET_ENCODED # bool = get_encoded(is_display, x, y); x < 0x10, y < 0x10, boo
 ldo x02 shr x03 # load x coordinate and shift right by 3
 ldo x02 shl x02 # load y coordinate and shift left by 2 (the most significant bit will be a 0)
 oor # bitwise both coordinates together to get a pointer to the buffer
-ldo x04 skp x04 lda xFF skp x01 ldb # load the byte from the right buffer based on is_display
-ldo x03 x07 and # get the offset of the bit in the byte of the buffer (low 3 bits of x coordinate)
+dup ldo x05 xFF ieq skp x06 ldo x05 add lda xFF skp x01 ldb # load the byte from the right buffer based on is_display
+ldo x04 x07 and # get the offset of the bit in the byte of the buffer (low 3 bits of x coordinate)
 swp shr x00 x01 and # get the right bit based on the lower 3 bits of the x coordinate
-nez sto x04 # return `bool` from the subroutine
+nez sto x05 # return `bool` from the subroutine
+drp
 rts # return from subroutine
 
-lbl $SET_ENCODED # draw_encoded(bool, is_display, x, y, bool); x < 0x20, y < 0x20, bool = [0x00, 0xFF], is_display = [0x00, 0xFF]
+lbl $SET_ENCODED # draw_encoded(bool, is_display, x, y); x < 0x20, y < 0x20, bool = [0x00, 0xFF], is_display = [0x00, 0xFF]
 ldo x02 shr x03 # load x coordinate and shift right by 3
 ldo x02 shl x02 # load y coordinate and shift left by 2 (the most significant bit will be a 0)
 oor # bitwise both coordinates together to get a pointer to the buffer
-dup ldo x05 skp x04 lda xFF skp x01 ldb # load the byte from the right buffer based on is_display
+dup ldo x05 xFF ieq skp x06 ldo x05 add lda xFF skp x01 ldb # load the byte from the right buffer based on is_display
 ldo x04 x07 and # get the offset of the bit in the byte of the buffer (low 3 bits of x coordinate)
 x01 swp shl x00 # shift the bit to the left by the lower 3 bits of the x coordinate
 ldo x07 skp x05 not and xFF skp x01 oor # set or clear the bit in the byte of the buffer based on `bool`
