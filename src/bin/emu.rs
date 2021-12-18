@@ -29,6 +29,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
   let const_false = 0; // value of false
 
   let mut memory: Vec<u8> = vec![0u8; const_mem_size]; // program RAM
+  let mut display_buffer: Vec<u8> = vec![0u8; const_mem_size]; // display buffer
   let mut stack_pointer: u8 = 0; // CPU stack pointer
   let mut instruction_pointer: u8 = 0; // CPU instruction pointer
   let mut stdout: String = String::new(); // stdout buffer for debugging
@@ -48,42 +49,33 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
             instruction_pointer += 1;
             let value = in_bytes[instruction_pointer as usize];
             psh(&mut memory, &mut stack_pointer, value);
-            "ldv"
+            "xXX"
           },
           0x02 => { "hlt"; break; },
-          0x08 => {
-            let port = pop(&mut memory, &mut stack_pointer);
+
+          0x11 => {
+            let mut address = pop(&mut memory, &mut stack_pointer);
+            let mut value = get(&mut memory, &mut address);
+            if address == 0x00 {
+              let mut line: String = String::new();
+              if const_debug { println!("Program is requesting byte from stdin."); }
+              std::io::stdin().read_line(&mut line).unwrap();
+              stdout += line.as_str();
+              value = line.as_bytes()[0];
+            }
+            psh(&mut memory, &mut stack_pointer, value);
+            "lda"
+          },
+          0x12 => {
+            let mut address = pop(&mut memory, &mut stack_pointer);
             let value = pop(&mut memory, &mut stack_pointer);
-            if port == 0x00 {
+            if address == 0x00 {
               stdout.push(value as char);
               if !const_debug {
                 write!(io::stdout(), "{}", value as char).unwrap();
                 io::stdout().flush().unwrap();
               }
-            } else { die(0x02, instruction_pointer, port); }
-            "out"
-          },
-          0x09 => {
-            let port = pop(&mut memory, &mut stack_pointer);
-            if port == 0x00 {
-              let mut line: String = String::new();
-              if const_debug { println!("Program is requesting byte from stdin."); }
-              std::io::stdin().read_line(&mut line).unwrap();
-              stdout += line.as_str();
-              psh(&mut memory, &mut stack_pointer, line.as_bytes()[0]);
-            } else { die(0x02, instruction_pointer, port); }
-            "iin"
-          },
-
-          0x11 => {
-            let mut address = pop(&mut memory, &mut stack_pointer);
-            let value = get(&mut memory, &mut address);
-            psh(&mut memory, &mut stack_pointer, value);
-            "lda"
-          },
-          0x12 => {
-            let value = pop(&mut memory, &mut stack_pointer);
-            let mut address = pop(&mut memory, &mut stack_pointer);
+            }
             set(&mut memory, &mut address, value);
             "sta"
           },
@@ -98,16 +90,28 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
           },
           // 0x18
           0x19 => {
+            let address = pop(&mut memory, &mut stack_pointer);
+            let value = display_buffer[address as usize];
+            psh(&mut memory, &mut stack_pointer, value);
+            "ldb"
+          },
+          0x1A => {
+            let address = pop(&mut memory, &mut stack_pointer);
+            let value = pop(&mut memory, &mut stack_pointer);
+            display_buffer[address as usize] = value;
+            "stb"
+          },
+          0x1B => {
             let value = pop(&mut memory, &mut stack_pointer);
             psh(&mut memory, &mut stack_pointer, value);
             psh(&mut memory, &mut stack_pointer, value);
             "dup"
           },
-          0x1A => {
+          0x1C => {
             pop(&mut memory, &mut stack_pointer);
             "drp"
           },
-          0x1B => {
+          0x1D => {
             let value1 = pop(&mut memory, &mut stack_pointer);
             let value2 = pop(&mut memory, &mut stack_pointer);
             psh(&mut memory, &mut stack_pointer, value1);

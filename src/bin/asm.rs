@@ -48,8 +48,6 @@ fn assemble(tokens: Vec<String>) -> Vec<u8> {
     match current_token {
       "nop" => { out_bytes.push(0x00) },
       "hlt" => { out_bytes.push(0x02) },
-      "out" => { out_bytes.push(0x08) },
-      "iin" => { out_bytes.push(0x09) },
 
       "lda" => { out_bytes.push(0x11) },
       "sta" => { out_bytes.push(0x12) },
@@ -59,9 +57,11 @@ fn assemble(tokens: Vec<String>) -> Vec<u8> {
       "sti" => { out_bytes.push(0x16) },
       "ldp" => { out_bytes.push(0x17) },
       "stp" => { out_bytes.push(0x18) },
-      "dup" => { out_bytes.push(0x19) },
-      "drp" => { out_bytes.push(0x1A) },
-      "swp" => { out_bytes.push(0x1B) },
+      "ldb" => { out_bytes.push(0x19) },
+      "stb" => { out_bytes.push(0x1A) },
+      "dup" => { out_bytes.push(0x1B) },
+      "drp" => { out_bytes.push(0x1C) },
+      "swp" => { out_bytes.push(0x1D) },
 
       "add" => { out_bytes.push(0x20) },
       "adc" => { out_bytes.push(0x21) },
