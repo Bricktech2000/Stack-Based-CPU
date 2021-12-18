@@ -3,6 +3,7 @@ opcodes:
       0x00 : nop : no operation
       0x01 : x00 : load 8-bit immediate to stack
       0x02 : htl : halt and return value on top of the stack
+      0x0F : dbg : enable emulator step-by-step debugging
 
       0x11 : lda : load value from memory address to stack (0x00 is stdin)
       0x12 : sta : store value to memory address from stack (0x00 is stdout)

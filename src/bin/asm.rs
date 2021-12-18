@@ -55,6 +55,7 @@ fn assemble(tokens: Vec<&str>, offset: usize, label_to_value: &mut HashMap<Strin
     match current_token {
       "nop" => { out_bytes.push(0x00) },
       "hlt" => { out_bytes.push(0x02) },
+      "dbg" => { out_bytes.push(0x0F) },
       "jms" => { index += 1; out_bytes.append(&mut assemble(vec!["ldi", "x05", "add", tokens[index], "sti"], out_bytes.len(), label_to_value, mention_to_label)) },
       "rts" => { out_bytes.append(&mut assemble(vec!["sti"], out_bytes.len(), label_to_value, mention_to_label)) },
 

@@ -24,8 +24,8 @@ fn main() {
 
 fn emulate(in_bytes: Vec<u8>) -> u8 {
   let const_mem_size: usize = 256;
-  let const_debug = false; // whether to show debug statements
-  let const_step = false; // whether to step through the program manually
+  let mut const_debug = false; // whether to show debug statements
+  let mut const_step = false; // whether to step through the program manually
   let const_true = 255; // value of true
   let const_false = 0; // value of false
 
@@ -54,6 +54,11 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
             "xXX"
           },
           0x02 => { "hlt"; break; },
+          0x0F => {
+            const_debug = true;
+            const_step = true;
+            "dbg"
+          },
 
           0x11 => {
             let mut address = pop(&mut memory, &mut stack_pointer);
@@ -194,16 +199,16 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
         },
         _ => { die(0x01, instruction_pointer, in_byte); "unk" },
     };
+    if last_display_or_stdout_update.elapsed() > Duration::from_millis(1000 / 30) { // ms
+      last_display_or_stdout_update = Instant::now();
+      print_display_and_stdout(&display_buffer, &stdout);
+    }
     if const_debug {
       println!("stack - instruction: {:02x} - {:02x}", stack_pointer, instruction_pointer);
       println!("op_code = mnemonic:  {:02x} = {}", in_byte, mnemonic);
       println!("stack memory slice   {:02x?}", memory.as_slice()[memory.len()-0x0B..].to_vec());
-      println!("hex stdout:\n{:?}", stdout.as_bytes());
+      println!("hex stdout: {:02x?}", stdout.as_bytes());
       println!("");
-    }
-    if last_display_or_stdout_update.elapsed() > Duration::from_millis(1000 / 30) { // ms
-      last_display_or_stdout_update = Instant::now();
-      print_display_and_stdout(&display_buffer, &stdout);
     }
 
     instruction_pointer += 1;
