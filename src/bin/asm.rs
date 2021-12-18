@@ -84,19 +84,21 @@ fn assemble(tokens: Vec<&str>, offset: usize, label_to_value: &mut HashMap<Strin
       "nez" => { out_bytes.push(0x29) },
       "neg" => { out_bytes.push(0x2A) },
       "abs" => { out_bytes.push(0x2B) },
-      
+
       "not" => { out_bytes.push(0x30) },
       "oor" => { out_bytes.push(0x31) },
       "and" => { out_bytes.push(0x32) },
       "xor" => { out_bytes.push(0x33) },
       "xnd" => { out_bytes.push(0x34) },
 
-      "sto" | "ldo" | "skp" => {
+      "sto" | "ldo" | "skp" | "shl" | "shr" => {
         index += 1;
         let op_code = match current_token {
           "sto" => 0x40,
           "ldo" => 0x80,
           "skp" => 0xC0, // TODO: could overflow
+          "shl" => 0xD0, // TODO: could overflow
+          "shr" => 0xD8, // TODO: could overflow
           _ => { die(0x05, current_token); 0x00 },
         };
         let current_token = tokens[index];

@@ -1,8 +1,9 @@
 use std::env;
 use std::fs;
-use std::{thread, time::Duration};
+use std::thread;
 use std::io;
 use std::io::prelude::*;
+use std::time::{Duration, Instant};
 
 fn main() {
   let args: Vec<String> = env::args().collect();
@@ -33,6 +34,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
   let mut stack_pointer: u8 = 0; // CPU stack pointer
   let mut instruction_pointer: u8 = 0; // CPU instruction pointer
   let mut stdout: String = String::new(); // stdout buffer for debugging
+  let mut last_display_or_stdout_update = Instant::now(); // las time the display buffer or stdout was updated
 
   while (instruction_pointer as usize) < in_bytes.len() {
     let in_byte = in_bytes[instruction_pointer as usize];
@@ -69,13 +71,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
           0x12 => {
             let mut address = pop(&mut memory, &mut stack_pointer);
             let value = pop(&mut memory, &mut stack_pointer);
-            if address == 0x00 {
-              stdout.push(value as char);
-              if !const_debug {
-                write!(io::stdout(), "{}", value as char).unwrap();
-                io::stdout().flush().unwrap();
-              }
-            }
+            if address == 0x00 { stdout.push(value as char); }
             set(&mut memory, &mut address, value);
             "sta"
           },
@@ -161,14 +157,37 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
           let mid_2_bits: u8 = (in_byte & 0b00110000) >> 4;
           match mid_2_bits {
             0b00 => {
-              if bit3 == 0b0 {
-                let offset = low_3_bits;
-                let condition = pop(&mut memory, &mut stack_pointer);
-                if condition == const_true { instruction_pointer += offset; }
-                else if condition != const_false { die(0x03, instruction_pointer, condition); }
-                "skp"
-              } else { die(0x01, instruction_pointer, in_byte); "unk" }
+              match bit3 {
+                0b0 => {
+                  let offset = low_3_bits;
+                  let condition = pop(&mut memory, &mut stack_pointer);
+                  if condition == const_true { instruction_pointer += offset; }
+                  else if condition != const_false { die(0x03, instruction_pointer, condition); }
+                  "skp"
+                },
+                _ => { die(0x01, instruction_pointer, in_byte); "unk" },
+              }
             },
+            0b01 => {
+              match bit3 {
+                0b0 => {
+                  let mut count = low_3_bits;
+                  if count == 0x00 { count = pop(&mut memory, &mut stack_pointer); }
+                  let value = pop(&mut memory, &mut stack_pointer);
+                  psh(&mut memory, &mut stack_pointer, value << count);
+                  "shl"
+                },
+                0b1 => {
+                  let mut count = low_3_bits;
+                  let value = pop(&mut memory, &mut stack_pointer);
+                  if count == 0x00 { count = pop(&mut memory, &mut stack_pointer); }
+                  psh(&mut memory, &mut stack_pointer, value >> count);
+                  "shr"
+                },
+                _ => { die(0x01, instruction_pointer, in_byte); "unk" },
+              }
+            },
+            // 0b10
             0b11 => { let immediate = low_4_bits; psh(&mut memory, &mut stack_pointer, immediate); "ldv" },
             _ => { die(0x01, instruction_pointer, in_byte); "unk" },
           }
@@ -179,8 +198,12 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
       println!("stack - instruction: {:02x} - {:02x}", stack_pointer, instruction_pointer);
       println!("op_code = mnemonic:  {:02x} = {}", in_byte, mnemonic);
       println!("stack memory slice   {:02x?}", memory.as_slice()[memory.len()-0x0B..].to_vec());
-      println!("Standard output:\n{}", stdout);
+      println!("hex stdout:\n{:?}", stdout.as_bytes());
       println!("");
+    }
+    if last_display_or_stdout_update.elapsed() > Duration::from_millis(1000 / 30) { // ms
+      last_display_or_stdout_update = Instant::now();
+      print_display_and_stdout(&display_buffer, &stdout);
     }
 
     instruction_pointer += 1;
@@ -189,8 +212,8 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
     if const_step { pause(); }
     else if const_debug { thread::sleep(Duration::from_millis(50)); }
   }
+  print_display_and_stdout(&display_buffer, &stdout);
 
-  println!("Standard output:\n{:?}", stdout.as_bytes());
 
   // make sure we reached a halt instruction
   if in_bytes[instruction_pointer as usize] != 0x02 { die(0x06, instruction_pointer, 0x00); }
@@ -213,6 +236,31 @@ fn binary_op<F: Fn(u8, u8) -> u8>(memory: &mut Vec<u8>, stack_pointer: &mut u8, 
 fn unary_op<F: Fn(u8) -> u8>(memory: &mut Vec<u8>, stack_pointer: &mut u8, closure: F) {
   let operand = pop(memory, stack_pointer);
   psh(memory, stack_pointer, closure(operand));
+}
+
+fn print_display_and_stdout(display_buffer: &Vec<u8>, stdout: &String) {
+  let mut display_buffer_string: String = String::new();
+  for y in (0..0x20).step_by(2) {
+    for x in 0..0x20 {
+      let mut pixel_pair = 0;
+      for y2 in 0..2 {
+        let address: u8 = (x >> 0x03) | ((y + y2) << 0x02);
+        let pixel = display_buffer[address as usize] >> (x & 0x07) & 0x01;
+        pixel_pair |= pixel << y2;
+      }
+      // https://en.wikipedia.org/wiki/Block_Elements
+      display_buffer_string += match pixel_pair {
+        0b00 => " ",
+        0b01 => "\u{2580}",
+        0b10 => "\u{2584}",
+        0b11 => "\u{2588}",
+        _ => "?",
+      }
+    }
+    display_buffer_string.push('\n');
+  }
+  println!("Display buffer:\n{}", display_buffer_string);
+  println!("Standard output:\n{}", stdout);
 }
 
 fn die(code: usize, instruction_pointer: u8, value: u8) {

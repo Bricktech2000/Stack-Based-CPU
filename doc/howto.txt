@@ -45,4 +45,6 @@ https://stackoverflow.com/questions/44549759/return-last-n-elements-of-vector-in
 https://stackoverflow.com/questions/28952938/how-can-i-put-the-current-thread-to-sleep
 https://newbedev.com/get-last-element-of-vector-rust-code-example
 https://stackoverflow.com/questions/31091846/cannot-pass-closure-as-parameter
+https://stackoverflow.com/questions/27893223/how-do-i-iterate-over-a-range-with-a-custom-step
+https://doc.rust-lang.org/std/time/struct.Duration.html
 
