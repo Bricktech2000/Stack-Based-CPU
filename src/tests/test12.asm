@@ -1,17 +1,14 @@
 # asks for single character input and prints it back
 
 $PROMPT # push argument to stack
-ldi x05 add # push return address to stack
-$PRINT_STRING sti # call function
+jms $PRINT_STRING # call subroutine
 drp # drop argument from stack
 
 x00 # allocate memory for return value
-ldi x05 add # push return address to stack
-$GET_CHAR sti # call function
+jms $GET_CHAR # call subroutine
 
 $ANSWER # push argument to stack
-ldi x05 add # push return address to stack
-$PRINT_STRING sti # call function
+jms $PRINT_STRING # call subroutine
 drp # drop argument from stack
 
 x00 sta x0A x00 sta # send character followed by newline to stdout
@@ -25,12 +22,12 @@ lbl $PRINT_STRING_LOOP # for loop
 dup ldo x03 inc add ldp # load character from program memory
 x00 sta inc # send current character to stdout and increment index
 dup ldo x03 ldp ieq skp x03 $PRINT_STRING_LOOP sti # loop back if index is not equal to the length of the string
-drp # otherwise, drop the index and return from the function
-sti
+drp # otherwise, drop the index and return from subroutine
+rts
 
 lbl $GET_CHAR
 x00 lda sto x01 # get char input from stdin and store to return value
-sti # return from the function
+rts # return from subroutine
 
 
 lbl $PROMPT # store string literal in program memory

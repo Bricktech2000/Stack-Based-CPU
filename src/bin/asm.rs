@@ -28,26 +28,35 @@ fn main() {
     index += 1;
   }
   // split into individual tokens
-  let tokens: Vec<String> = mod_string.split_whitespace().map(str::to_string).collect();
-  let out_bytes = assemble(tokens);
+  let tokens: Vec<&str> = mod_string.split_whitespace().collect();
+  // used to resolve labels
+  let mut label_to_value: HashMap<String, u8> = HashMap::new();
+  let mut mention_to_label: HashMap<u8, String> = HashMap::new();
+  let mut out_bytes = assemble(tokens, 0x00, &mut label_to_value, &mut mention_to_label);
+  // resolve labels
+  for (mention, label) in mention_to_label.iter() {
+    match label_to_value.get(label) {
+      Some(value) => out_bytes[*mention as usize] = *value,
+      None => die(0x04, label),
+    }
+  }
   fs::write(format!("{}{}", &args[1], ".bin"), out_bytes).expect("Unable to write file.");
 
   println!("Process Successful.");
 }
 
-fn assemble(tokens: Vec<String>) -> Vec<u8> {
-  // used to resolve labels
-  let mut label_to_value: HashMap<String, u8> = HashMap::new();
-  let mut mention_to_label: HashMap<u8, String> = HashMap::new();
+fn assemble(tokens: Vec<&str>, offset: usize, label_to_value: &mut HashMap<String, u8>, mention_to_label: &mut HashMap<u8, String>) -> Vec<u8> {
 
   let mut index = 0;
   let mut out_bytes: Vec<u8> = vec![];
   while index < tokens.len() {
-    let current_token: &str = tokens[index].as_str();
+    let current_token: &str = tokens[index];
 
     match current_token {
       "nop" => { out_bytes.push(0x00) },
       "hlt" => { out_bytes.push(0x02) },
+      "jms" => { index += 1; out_bytes.append(&mut assemble(vec!["ldi", "x05", "add", tokens[index], "sti"], out_bytes.len(), label_to_value, mention_to_label)) },
+      "rts" => { out_bytes.append(&mut assemble(vec!["sti"], out_bytes.len(), label_to_value, mention_to_label)) },
 
       "lda" => { out_bytes.push(0x11) },
       "sta" => { out_bytes.push(0x12) },
@@ -90,7 +99,7 @@ fn assemble(tokens: Vec<String>) -> Vec<u8> {
           "skp" => 0xC0, // TODO: could overflow
           _ => { die(0x05, current_token); 0x00 },
         };
-        let current_token = tokens[index].as_str();
+        let current_token = tokens[index];
         match get_immediate(current_token) {
           Ok(value) => {
             if value < 0x20 { out_bytes.push(op_code | value) }
@@ -103,13 +112,13 @@ fn assemble(tokens: Vec<String>) -> Vec<u8> {
 
       "lbl" => {
         index += 1;
-        let current_token = tokens[index].as_str();
-        label_to_value.insert(current_token.to_string(), out_bytes.len() as u8);
+        let current_token = tokens[index];
+        label_to_value.insert(current_token.to_string(), (offset + out_bytes.len()) as u8);
       },
       _ if current_token.starts_with("$") => {
         out_bytes.push(0x01);
         out_bytes.push(0xCC);
-        mention_to_label.insert(out_bytes.len() as u8 - 1, current_token.to_string());
+        mention_to_label.insert((offset + out_bytes.len()) as u8 - 1, current_token.to_string());
       },
       _ if current_token.starts_with("x") => {
         match get_immediate(current_token) {
@@ -133,13 +142,6 @@ fn assemble(tokens: Vec<String>) -> Vec<u8> {
       _ => { die(0x03, current_token) },
     };
     index += 1;
-  }
-  // resolve labels
-  for (mention, label) in mention_to_label.iter() {
-    match label_to_value.get(label) {
-      Some(value) => out_bytes[*mention as usize] = *value,
-      None => die(0x04, label),
-    }
   }
   out_bytes
 }

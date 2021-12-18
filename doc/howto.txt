@@ -27,6 +27,7 @@ https://stackoverflow.com/questions/26643688/how-do-i-split-a-string-in-rust
 https://users.rust-lang.org/t/how-can-i-return-a-vector-of-strings-by-splitting-a-string-that-has-spaces-in-between/45266
 https://www.reddit.com/r/rust/comments/f4usb4/pattern_matching_on_string_content_as_chars/
 https://www.reddit.com/r/rust/comments/f4usb4/pattern_matching_on_string_content_as_chars/
+https://stackoverflow.com/questions/40792801/best-way-to-concatenate-vectors-in-rust
 
 emu:
 https://doc.rust-lang.org/std/primitive.array.html
