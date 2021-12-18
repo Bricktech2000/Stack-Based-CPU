@@ -5,12 +5,6 @@ use std::io;
 use std::io::prelude::*;
 
 fn main() {
-  let const_mem_size: usize = 256;
-  let const_debug = false; // whether to show debug statements
-  let const_step = false; // whether to step through the program manually
-  let const_true = 255; // value of true
-  let const_false = 0; // value of false
-
   let args: Vec<String> = env::args().collect();
   if args.len() != 2 {
     println!("Usage: emu <filename>");
@@ -20,6 +14,20 @@ fn main() {
   println!("Emulating CPU...");
 
   let in_bytes: Vec<u8> = fs::read(&args[1]).expect("Unable to read file.");
+  let exit_code = emulate(in_bytes);
+
+  println!("");
+  println!("CPU halted successfully.");
+  println!("Exit code: {:#04x}, {:#010b} ({}, {})", exit_code, exit_code, exit_code, exit_code as i8);
+}
+
+fn emulate(in_bytes: Vec<u8>) -> u8 {
+  let const_mem_size: usize = 256;
+  let const_debug = false; // whether to show debug statements
+  let const_step = false; // whether to step through the program manually
+  let const_true = 255; // value of true
+  let const_false = 0; // value of false
+
   let mut memory: Vec<u8> = vec![0u8; const_mem_size]; // program RAM
   let mut stack_pointer: u8 = 0; // CPU stack pointer
   let mut instruction_pointer: u8 = 0; // CPU instruction pointer
@@ -167,6 +175,7 @@ fn main() {
       println!("stack - instruction: {:02x} - {:02x}", stack_pointer, instruction_pointer);
       println!("op_code = mnemonic:  {:02x} = {}", in_byte, mnemonic);
       println!("stack memory slice   {:02x?}", memory.as_slice()[memory.len()-0x0B..].to_vec());
+      println!("Standard output:\n{}", stdout);
       println!("");
     }
 
@@ -181,12 +190,7 @@ fn main() {
   if in_bytes[instruction_pointer as usize] != 0x02 { die(0x06, instruction_pointer, 0x00); }
   // make sure only one value is left on the stack
   if stack_pointer != -1i8 as u8 { die(0x05, instruction_pointer, stack_pointer); }
-  let exit_code = memory.last().unwrap();
-
-  println!("");
-  if const_debug { println!("Standard output:\n{}", stdout); }
-  println!("CPU halted successfully.");
-  println!("Exit code: {:#04x}, {:#010b} ({}, {})", exit_code, exit_code, exit_code, *exit_code as i8);
+  *memory.last().unwrap()
 }
 
 fn psh(memory: &mut Vec<u8>, stack_pointer: &mut u8, value: u8) { *stack_pointer -= 1; memory[*stack_pointer as usize] = value; }

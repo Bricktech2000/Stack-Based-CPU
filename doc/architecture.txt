@@ -2,7 +2,7 @@ opcodes:
   0 0 :
       0x00 : nop : no operation
       0x01 : x00 : load 8-bit immediate to stack
-      0x02 : htl : halt
+      0x02 : htl : halt and return value on top of the stack
       0x08 : out : output 8-bit immediate to port (0x00 is stdout)
       0x09 : iin : input 8-bit immediate from port (0x00 is stdin)
 

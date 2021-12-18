@@ -14,11 +14,6 @@ fn main() {
 
   let in_string: String = fs::read_to_string(&args[1]).expect("Unable to read file.");
   let in_bytes: &[u8] = in_string.as_bytes();
-  let mut out_bytes: Vec<u8> = vec![];
-
-  // used to resolve labels
-  let mut label_to_value: HashMap<String, u8> = HashMap::new();
-  let mut mention_to_label: HashMap<u8, String> = HashMap::new();
 
   // filter out comments
   let mut index = 0;
@@ -34,8 +29,19 @@ fn main() {
   }
   // split into individual tokens
   let tokens: Vec<String> = mod_string.split_whitespace().map(str::to_string).collect();
+  let out_bytes = assemble(tokens);
+  fs::write(format!("{}{}", &args[1], ".bin"), out_bytes).expect("Unable to write file.");
 
-  index = 0;
+  println!("Process Successful.");
+}
+
+fn assemble(tokens: Vec<String>) -> Vec<u8> {
+  // used to resolve labels
+  let mut label_to_value: HashMap<String, u8> = HashMap::new();
+  let mut mention_to_label: HashMap<u8, String> = HashMap::new();
+
+  let mut index = 0;
+  let mut out_bytes: Vec<u8> = vec![];
   while index < tokens.len() {
     let current_token: &str = tokens[index].as_str();
 
@@ -135,9 +141,7 @@ fn main() {
       None => die(0x04, label),
     }
   }
-
-  fs::write(format!("{}{}", &args[1], ".bin"), out_bytes).expect("Unable to write file.");
-  println!("Process Successful.");
+  out_bytes
 }
 
 fn get_immediate(current_token: &str) -> Result<u8, usize> {
