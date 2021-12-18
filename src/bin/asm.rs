@@ -13,6 +13,13 @@ fn main() {
   println!("Running Assembler...");
 
   let in_string: String = fs::read_to_string(&args[1]).expect("Unable to read file.");
+  let out_bytes: Vec<u8> = assemble(&in_string);
+  fs::write(format!("{}{}", &args[1], ".bin"), out_bytes).expect("Unable to write file.");
+
+  println!("Process Successful.");
+}
+
+fn assemble(in_string: &String) -> Vec<u8> {
   let in_bytes: &[u8] = in_string.as_bytes();
 
   // filter out comments
@@ -32,7 +39,7 @@ fn main() {
   // used to resolve labels
   let mut label_to_value: HashMap<String, u8> = HashMap::new();
   let mut mention_to_label: HashMap<u8, String> = HashMap::new();
-  let mut out_bytes = assemble(tokens, 0x00, &mut label_to_value, &mut mention_to_label);
+  let mut out_bytes = assemble_recursive(tokens, 0x00, &mut label_to_value, &mut mention_to_label);
   // resolve labels
   for (mention, label) in mention_to_label.iter() {
     match label_to_value.get(label) {
@@ -40,13 +47,10 @@ fn main() {
       None => die(0x04, label),
     }
   }
-  fs::write(format!("{}{}", &args[1], ".bin"), out_bytes).expect("Unable to write file.");
-
-  println!("Process Successful.");
+  out_bytes
 }
 
-fn assemble(tokens: Vec<&str>, offset: usize, label_to_value: &mut HashMap<String, u8>, mention_to_label: &mut HashMap<u8, String>) -> Vec<u8> {
-
+fn assemble_recursive(tokens: Vec<&str>, offset: usize, label_to_value: &mut HashMap<String, u8>, mention_to_label: &mut HashMap<u8, String>) -> Vec<u8> {
   let mut index = 0;
   let mut out_bytes: Vec<u8> = vec![];
   while index < tokens.len() {
@@ -56,8 +60,8 @@ fn assemble(tokens: Vec<&str>, offset: usize, label_to_value: &mut HashMap<Strin
       "nop" => { out_bytes.push(0x00) },
       "hlt" => { out_bytes.push(0x02) },
       "dbg" => { out_bytes.push(0x0F) },
-      "jms" => { index += 1; out_bytes.append(&mut assemble(vec!["ldi", "x05", "add", tokens[index], "sti"], out_bytes.len(), label_to_value, mention_to_label)) },
-      "rts" => { out_bytes.append(&mut assemble(vec!["sti"], out_bytes.len(), label_to_value, mention_to_label)) },
+      "jms" => { index += 1; out_bytes.append(&mut assemble_recursive(vec!["ldi", "x05", "add", tokens[index], "sti"], out_bytes.len(), label_to_value, mention_to_label)) },
+      "rts" => { out_bytes.append(&mut assemble_recursive(vec!["sti"], out_bytes.len(), label_to_value, mention_to_label)) },
 
       "lda" => { out_bytes.push(0x11) },
       "sta" => { out_bytes.push(0x12) },
