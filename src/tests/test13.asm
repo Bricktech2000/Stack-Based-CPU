@@ -4,7 +4,7 @@ x00
 lbl $MAIN_LOOP_Y
 x00
 lbl $MAIN_LOOP_X
-ldo x00 ldo x02 ldo x01 x01 and ldo x01 x01 and xor nez
+ldo x00 ldo x02 ldo x01 ldo x01 xor x01 and nez
 jms $SET_PIXEL
 drp drp drp
 inc dup x20 ieq skp x03 $MAIN_LOOP_X sti
