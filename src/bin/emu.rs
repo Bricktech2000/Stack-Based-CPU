@@ -190,6 +190,8 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
     else if const_debug { thread::sleep(Duration::from_millis(50)); }
   }
 
+  println!("Standard output:\n{:?}", stdout.as_bytes());
+
   // make sure we reached a halt instruction
   if in_bytes[instruction_pointer as usize] != 0x02 { die(0x06, instruction_pointer, 0x00); }
   // make sure only one value is left on the stack
