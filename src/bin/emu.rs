@@ -63,7 +63,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
           0x11 => {
             let mut address = pop(&mut memory, &mut stack_pointer);
             let mut value = get(&mut memory, &mut address);
-            if address == 0x00 {
+            if address == 0xFF {
               let mut line: String = String::new();
               if const_debug { println!("Program is requesting byte from stdin."); }
               std::io::stdin().read_line(&mut line).unwrap();
@@ -76,7 +76,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
           0x12 => {
             let mut address = pop(&mut memory, &mut stack_pointer);
             let value = pop(&mut memory, &mut stack_pointer);
-            if address == 0x00 { stdout.push(value as char); }
+            if address == 0xFF { stdout.push(value as char); }
             set(&mut memory, &mut address, value);
             "sta"
           },
@@ -129,7 +129,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
           0x26 => { binary_op(&mut memory, &mut stack_pointer, |a, b| (a < b) as u8 * const_true); "ilt" },
           0x27 => { binary_op(&mut memory, &mut stack_pointer, |a, b| (a > b) as u8 * const_true); "igt" },
           0x28 => { binary_op(&mut memory, &mut stack_pointer, |a, b| (a == b) as u8 * const_true); "ieq" },
-          0x29 => { unary_op(&mut memory, &mut stack_pointer, |a| (a == 0) as u8 * const_true); "nez" },
+          0x29 => { unary_op(&mut memory, &mut stack_pointer, |a| (a != 0) as u8 * const_true); "nez" },
           0x2A => { unary_op(&mut memory, &mut stack_pointer, |a| -(a as i8) as u8); "not" },
           0x2B => { unary_op(&mut memory, &mut stack_pointer, |a| (a as i8).abs() as u8); "abs" },
 
@@ -193,7 +193,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
               }
             },
             // 0b10
-            0b11 => { let immediate = low_4_bits; psh(&mut memory, &mut stack_pointer, immediate); "ldv" },
+            0b11 => { let immediate = low_4_bits; psh(&mut memory, &mut stack_pointer, immediate); "x0X" },
             _ => { die(0x01, instruction_pointer, in_byte); "unk" },
           }
         },
@@ -206,7 +206,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
     if const_debug {
       println!("stack - instruction: {:02x} - {:02x}", stack_pointer, instruction_pointer);
       println!("op_code = mnemonic:  {:02x} = {}", in_byte, mnemonic);
-      println!("stack memory slice   {:02x?}", memory.as_slice()[memory.len()-0x0B..].to_vec());
+      println!("stack memory slice   {:02x?}", memory.as_slice()[memory.len()-0x10..].to_vec());
       println!("hex stdout: {:02x?}", stdout.as_bytes());
       println!("");
     }
