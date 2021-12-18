@@ -112,6 +112,24 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
             pop(&mut memory, &mut stack_pointer);
             "drp"
           },
+          0x05 => {
+            pop(&mut memory, &mut stack_pointer);
+            pop(&mut memory, &mut stack_pointer);
+            "dr2"
+          },
+          0x03 => {
+            pop(&mut memory, &mut stack_pointer);
+            pop(&mut memory, &mut stack_pointer);
+            pop(&mut memory, &mut stack_pointer);
+            "dr3"
+          },
+          0x04 => {
+            pop(&mut memory, &mut stack_pointer);
+            pop(&mut memory, &mut stack_pointer);
+            pop(&mut memory, &mut stack_pointer);
+            pop(&mut memory, &mut stack_pointer);
+            "dr4"
+          },
           0x1D => {
             let value1 = pop(&mut memory, &mut stack_pointer);
             let value2 = pop(&mut memory, &mut stack_pointer);
@@ -215,7 +233,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
 
     // delay the execution of the instructions if debug is enabled
     if const_step { pause(); }
-    else if const_debug { thread::sleep(Duration::from_millis(50)); }
+    // else if const_debug { thread::sleep(Duration::from_millis(50)); }
   }
   print_display_and_stdout(&display_buffer, &stdout);
 
