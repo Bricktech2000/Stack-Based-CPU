@@ -265,7 +265,15 @@ fn unary_op<F: Fn(u8) -> u8>(memory: &mut Vec<u8>, stack_pointer: &mut u8, closu
 
 fn print_display_and_stdout(display_buffer: &Vec<u8>, stdout: &String) {
   let mut display_buffer_string: String = String::new();
+  let line: String = std::iter::repeat("-").take(32).collect::<String>();
+  let line_top: String = ".-".to_owned() + &line + "-.\n";
+  let line_bottom: String = "'-".to_owned() + &line + "-'\n";
+  let col_left: String = "| ".to_string();
+  let col_right: String = " |".to_string();
+
+  display_buffer_string += &line_top;
   for y in (0..0x20).step_by(2) {
+    display_buffer_string += &col_left;
     for x in 0..0x20 {
       let mut pixel_pair = 0;
       for y2 in 0..2 {
@@ -280,10 +288,12 @@ fn print_display_and_stdout(display_buffer: &Vec<u8>, stdout: &String) {
         0b10 => "\u{2584}",
         0b11 => "\u{2588}",
         _ => "?",
-      }
+      };
     }
+    display_buffer_string += &col_right;
     display_buffer_string.push('\n');
   }
+  display_buffer_string += &line_bottom;
   println!("Display buffer:\n{}", display_buffer_string);
   println!("Standard output:\n{}", stdout);
 }

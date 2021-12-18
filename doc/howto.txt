@@ -4,6 +4,7 @@ clear; cargo run --bin asm src/tests/test9.asm; cargo run --bin emu src/tests/te
 
 
 srcs:
+https://stackoverflow.com/questions/55770816/why-does-rust-compile-my-project-again-with-cargo-build-release-followed-by
 
 asm:
 https://doc.rust-lang.org/book/ch12-01-accepting-command-line-arguments.html
@@ -47,4 +48,5 @@ https://newbedev.com/get-last-element-of-vector-rust-code-example
 https://stackoverflow.com/questions/31091846/cannot-pass-closure-as-parameter
 https://stackoverflow.com/questions/27893223/how-do-i-iterate-over-a-range-with-a-custom-step
 https://doc.rust-lang.org/std/time/struct.Duration.html
+https://users.rust-lang.org/t/fill-string-with-repeated-character/1121
 
