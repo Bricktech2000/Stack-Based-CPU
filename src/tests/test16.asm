@@ -1,93 +1,67 @@
-# conway's game of life simulation
-
-# current generation is stored in bits from 0x00 to 0x80 in the display buffer
-#    next generation is stored in bits from 0x00 to 0x80 in RAM
-# each cell is a 1x1 squaree in the display buffer
-
-# draw a glider
-# xFF xFF
-# x04 x03 jms $SET_ENCODED drp drp
-# x05 x04 jms $SET_ENCODED drp drp
-# x05 x05 jms $SET_ENCODED drp drp
-# x04 x05 jms $SET_ENCODED drp drp
-# x03 x05 jms $SET_ENCODED drp drp
-# drp drp
-
-# draw an R_pentomino
-# xFF xFF
-# x0F x0E jms $SET_ENCODED drp drp
-# x10 x0E jms $SET_ENCODED drp drp
-# x0E x0F jms $SET_ENCODED drp drp
-# x0F x0F jms $SET_ENCODED drp drp
-# x0F x10 jms $SET_ENCODED drp drp
-# drp drp
-
-# draw a Diehard and a glider
-# the Diehard below has already advanced 2 generations
-xFF xFF
-x0C x08 jms $SET_ENCODED drp drp
-x0C x09 jms $SET_ENCODED drp drp
-x0D x09 jms $SET_ENCODED drp drp
-x11 x09 jms $SET_ENCODED drp drp
-x12 x09 jms $SET_ENCODED drp drp
-x13 x09 jms $SET_ENCODED drp drp
-x12 x08 jms $SET_ENCODED drp drp
-
-x01 x0C jms $SET_ENCODED drp drp
-x02 x0D jms $SET_ENCODED drp drp
-x02 x0E jms $SET_ENCODED drp drp
-x01 x0E jms $SET_ENCODED drp drp
-x00 x0E jms $SET_ENCODED drp drp
-drp drp
+# snake game
 
 
+
+
+
+
+
+
+
+
+
+x08 x09 # allocate head position
+x00 # allocate snake length
+x00 x00 # allocate snake direction delta
 x00 x00
 lbl $MAIN_LOOP_STEP # main game loop
 
-$GENERATION jms $PRINT_STRING drp drp
+$SCORE jms $PRINT_STRING drp drp
 ldo x01 jms $PRINT_BYTE_AS_HEX ldo x01 jms $PRINT_BYTE_AS_HEX drp drp
 
-x00
-lbl $MAIN_LOOP_Y # loop over y coordinate
-x00
-lbl $MAIN_LOOP_X # loop over x coordinate
+# calculate the new temporary head position by adding the position delta
+# ldo x04 ldo x02 add x0F and sto x04
+# ldo x03 ldo x01 add x0F and sto x03
 
-x00 # allocate room for neighbor count
+# hard-coded snake movement and growth
+ldo x06 dec x0F and sto x06
+ldo x05 nop x0F and sto x05
+ldo x04 inc sto x04
 
-# count neighbours
-xFF
-lbl $MAIN_LOOP_DY
-xFF
-lbl $MAIN_LOOP_DX
-dup ldo x02 oor nez skp x01 inc # if dy = dx = 0, skip the iteration by incrementing the counter
-ldo x02 # get the neighbor count
-x00 xFF ldo x03 ldo x07 add x1F and ldo x05 ldo x09 add x1F and jms $GET_ENCODED drp drp drp # get_encoded(x + dx & 0x1F, y + dy & 0x1F)
-neg add sto x02 # store the new neighbor count
-for x02 $MAIN_LOOP_DX sti
-drp
-for x02 $MAIN_LOOP_DY sti
+# clear display buffer
+x00
+lbl $MAIN_LOOP_CLEAR
+dup x00 swp stb
+for x80 $MAIN_LOOP_CLEAR sti
 drp
 
-# game of life rules
-dup x03 ieq xFF ldo x03 ldo x05 # if 3 neighbours, set the cell to alive. otherwise, set it to dead
-ldo x04 x02 ieq not skp x07 jms $GET_ENCODED x00 sto x02 jms $SET_ENCODED # exception: if the cell has 2 neighbours, do not take action
+ldo x06 ldo x06 # allocate temporary head position
+
+ldo x06 neg # get negative snake length
+lbl $MAIN_LOOP_BODY
+x00 x00 # allocate position delta
+
+# get direction bits
+x00 ldo x04 ldo x04 dup add jms $GET_ENCODED drp drp drp # get first bit (up&down / left&right)
+dup add inc
+x00 x00 ldo x04 ldo x04 dup add jms $GET_ENCODED drp drp drp # get second bit (up / down or left / right)
+skp x01 swp
+
+xFF xFF ldo x06 dup add ldo x06 dup add jms $SET_ENCODED # display a pixel at the head position
+drp ldo x04 add ldo x06 dup add ldo x04 add jms $SET_ENCODED # display a pixel at the head position with the delta
 drp drp drp drp
 
-drp # deallocate room for neighbor count
-for x20 $MAIN_LOOP_X sti
-drp
-for x20 $MAIN_LOOP_Y sti
+# calculate the new temporary head position by adding the position delta
+ldo x04 ldo x02 add x0F and sto x04
+ldo x03 ldo x01 add x0F and sto x03
+
+drp drp # deallocate position delta
+for x01 $MAIN_LOOP_BODY sti # loop while the snake length is not zero
 drp
 
-# copy all cells from the next generation to the current generation
-x00
-lbl $MAIN_LOOP_N
-dup dup lda swp stb
-for x80 $MAIN_LOOP_N sti
-drp
+drp drp # deallocate temporary head position
 
 x01 adc $MAIN_LOOP_STEP sti
-
 
 
 
@@ -138,5 +112,5 @@ rts
 lbl $HEX_DIGITS
 p30 p31 p32 p33 p34 p35 p36 p37 p38 p39 p41 p42 p43 p44 p45 p46
 
-lbl $GENERATION
-p0C p0D p47 p65 p6E p65 p72 p61 p74 p69 p6f p6E p20
+lbl $SCORE
+p08 p0D p53 p63 p6f p72 p65 p3A p20
