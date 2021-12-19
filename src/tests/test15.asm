@@ -5,22 +5,22 @@
 # each cell is a 1x1 squaree in the display buffer
 
 # draw a glider
-xFF xFF
-x04 x03 jms $SET_ENCODED drp drp
-x05 x04 jms $SET_ENCODED drp drp
-x05 x05 jms $SET_ENCODED drp drp
-x04 x05 jms $SET_ENCODED drp drp
-x03 x05 jms $SET_ENCODED drp drp
-drp drp
+# xFF xFF
+# x04 x03 jms $SET_ENCODED drp drp
+# x05 x04 jms $SET_ENCODED drp drp
+# x05 x05 jms $SET_ENCODED drp drp
+# x04 x05 jms $SET_ENCODED drp drp
+# x03 x05 jms $SET_ENCODED drp drp
+# drp drp
 
 # draw an R_pentomino
-# xFF xFF
-# x0F x0E jms $SET_ENCODED drp drp
-# x10 x0E jms $SET_ENCODED drp drp
-# x0E x0F jms $SET_ENCODED drp drp
-# x0F x0F jms $SET_ENCODED drp drp
-# x0F x10 jms $SET_ENCODED drp drp
-# drp drp
+xFF xFF
+x0F x0E jms $SET_ENCODED drp drp
+x10 x0E jms $SET_ENCODED drp drp
+x0E x0F jms $SET_ENCODED drp drp
+x0F x0F jms $SET_ENCODED drp drp
+x0F x10 jms $SET_ENCODED drp drp
+drp drp
 
 x00 x00
 lbl $MAIN_LOOP_STEP # main game loop
