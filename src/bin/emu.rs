@@ -139,11 +139,17 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
             let result = operand1 + operand2;
             psh(&mut memory, &mut stack_pointer, ((result + 1) >> 8) as u8);
             psh(&mut memory, &mut stack_pointer, ((result + 1) & 0xFF) as u8);
-            "ada"
-          }, // TEMPORARY
-          // 0x21 adc
+            "adc"
+          },
           0x22 => { binary_op(&mut memory, &mut stack_pointer, |a, b| a - b); "sub" },
-          // 0x23 subc
+          0x23 => {
+            let operand1 = pop(&mut memory, &mut stack_pointer) as u16;
+            let operand2 = (pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8) - 1;
+            let result = operand1 - operand2;
+            psh(&mut memory, &mut stack_pointer, ((result + 1) >> 8) as u8);
+            psh(&mut memory, &mut stack_pointer, ((result + 1) & 0xFF) as u8);
+            "sbc"
+          },
           0x24 => { unary_op(&mut memory, &mut stack_pointer, |a| a + 1); "inc" },
           0x25 => { unary_op(&mut memory, &mut stack_pointer, |a| a - 1); "dec" },
           0x26 => { binary_op(&mut memory, &mut stack_pointer, |a, b| (a < b) as u8 * const_true); "ilt" },

@@ -67,7 +67,7 @@ dup dup lda swp stb
 for x80 $MAIN_LOOP_N sti
 drp
 
-x01 ada $MAIN_LOOP_STEP sti
+x01 adc $MAIN_LOOP_STEP sti
 
 
 
@@ -106,15 +106,15 @@ ldo x04 ldo x04 rts
 lbl $PRINT_STRING # print_string(length, [char])
 x00 # set index to 0
 lbl $PRINT_STRING_LOOP # for loop
-ldo x04 ldo x04 ldo x02 ada x01 ada ldp # load character from program memory
+ldo x04 ldo x04 ldo x02 adc x01 adc ldp # load character from program memory
 xFF sta # send current character to stdout
 inc ldo x04 ldo x04 ldp ldo x01 ieq skp x04 $PRINT_STRING_LOOP sti # loop back if index is not equal to the length of the string
 drp # otherwise, drop the index and return from subroutine
 rts
 
 lbl $PRINT_BYTE_AS_HEX
-$HEX_DIGITS ldo x04 shr x04 ada ldp xFF sta
-$HEX_DIGITS ldo x04 x0F and ada ldp xFF sta
+$HEX_DIGITS ldo x04 shr x04 adc ldp xFF sta
+$HEX_DIGITS ldo x04 x0F and adc ldp xFF sta
 rts
 lbl $HEX_DIGITS
 p30 p31 p32 p33 p34 p35 p36 p37 p38 p39 p41 p42 p43 p44 p45 p46

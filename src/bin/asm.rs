@@ -63,7 +63,7 @@ fn assemble_recursive(tokens: Vec<&str>, offset: usize, label_to_value: &mut Has
       "nop" => { out_bytes.push(0x00) },
       "hlt" => { out_bytes.push(0x02) },
       "dbg" => { out_bytes.push(0x0F) },
-      "jms" => { index += 1; out_bytes.append(&mut assemble_recursive(vec!["ldi", "x06", "ada", tokens[index], "sti"], out_bytes.len(), label_to_value, mention_to_label)) },
+      "jms" => { index += 1; out_bytes.append(&mut assemble_recursive(vec!["ldi", "x06", "adc", tokens[index], "sti"], out_bytes.len(), label_to_value, mention_to_label)) },
       "rts" => { out_bytes.append(&mut assemble_recursive(vec!["sti"], out_bytes.len(), label_to_value, mention_to_label)) },
       "for" => { index += 1; out_bytes.append(&mut assemble_recursive(vec!["inc", "dup", tokens[index], "ieq", "skp", "x04"], out_bytes.len(), label_to_value, mention_to_label)) },
 
@@ -82,7 +82,7 @@ fn assemble_recursive(tokens: Vec<&str>, offset: usize, label_to_value: &mut Has
       "swp" => { out_bytes.push(0x1D) },
 
       "add" => { out_bytes.push(0x20) },
-      "adc" | "ada" => { out_bytes.push(0x21) }, // TEMPORARY
+      "adc" => { out_bytes.push(0x21) },
       "sub" => { out_bytes.push(0x22) },
       "sbc" => { out_bytes.push(0x23) },
       "inc" => { out_bytes.push(0x24) },

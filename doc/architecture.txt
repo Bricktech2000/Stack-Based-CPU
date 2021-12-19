@@ -21,10 +21,9 @@ opcodes:
       0x1D : swp : swap two values on stack
 
       0x20 : add : addition
-      0x21 : ada : TEMPORARY HACK - 16-bit addition
-      0x21 : adc : addition with carry
+      0x21 : adc : addition with carry (increments thrid byte on overflow)
       0x22 : sub : subtraction
-      0x23 : sbc : subtraction with borrow
+      0x23 : sbc : subtraction with borrow (decrements thrid byte on underflow)
       0x24 : inc : increment
       0x25 : dec : decrement
       0x26 : ilt : is less than
