@@ -14,13 +14,32 @@
 # drp drp
 
 # draw an R_pentomino
+# xFF xFF
+# x0F x0E jms $SET_ENCODED drp drp
+# x10 x0E jms $SET_ENCODED drp drp
+# x0E x0F jms $SET_ENCODED drp drp
+# x0F x0F jms $SET_ENCODED drp drp
+# x0F x10 jms $SET_ENCODED drp drp
+# drp drp
+
+# draw a Diehard and a glider
+# the Diehard below has already advanced 2 generations
 xFF xFF
-x0F x0E jms $SET_ENCODED drp drp
-x10 x0E jms $SET_ENCODED drp drp
-x0E x0F jms $SET_ENCODED drp drp
-x0F x0F jms $SET_ENCODED drp drp
-x0F x10 jms $SET_ENCODED drp drp
+x0C x08 jms $SET_ENCODED drp drp
+x0C x09 jms $SET_ENCODED drp drp
+x0D x09 jms $SET_ENCODED drp drp
+x11 x09 jms $SET_ENCODED drp drp
+x12 x09 jms $SET_ENCODED drp drp
+x13 x09 jms $SET_ENCODED drp drp
+x12 x08 jms $SET_ENCODED drp drp
+
+x01 x0C jms $SET_ENCODED drp drp
+x02 x0D jms $SET_ENCODED drp drp
+x02 x0E jms $SET_ENCODED drp drp
+x01 x0E jms $SET_ENCODED drp drp
+x00 x0E jms $SET_ENCODED drp drp
 drp drp
+
 
 x00 x00
 lbl $MAIN_LOOP_STEP # main game loop
