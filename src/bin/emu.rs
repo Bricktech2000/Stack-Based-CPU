@@ -1,9 +1,13 @@
+extern crate crossterm;
+
 use std::env;
 use std::fs;
 use std::io;
 use std::thread;
 use std::io::prelude::*;
 use std::time::{Duration, Instant};
+
+// use crossterm::event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers};
 
 fn main() {
   let args: Vec<String> = env::args().collect();
@@ -33,7 +37,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
   let mut display_buffer: Vec<u8> = vec![0u8; const_mem_size]; // display buffer
   let mut stack_pointer: u8 = 0; // CPU stack pointer
   let mut instruction_pointer: u16 = 0; // CPU instruction pointer
-  let mut stdout: String = String::new(); // stdout buffer for debugging
+  let mut stdout_buffer: String = String::new(); // stdout buffer for debugging
   let mut last_display_or_stdout_update = Instant::now(); // las time the display buffer or stdout was updated
 
   while (instruction_pointer as usize) < in_bytes.len() {
@@ -73,8 +77,34 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
               let mut line: String = String::new();
               if const_debug { println!("Program is requesting byte from stdin."); }
               std::io::stdin().read_line(&mut line).unwrap();
-              stdout += line.as_str();
+              stdout_buffer += line.as_str();
               value = line.as_bytes()[0];
+            // } else if address == 0xFE {
+              // https://stackoverflow.com/questions/60130532/detect-keydown
+              // https://docs.rs/crossterm/0.17.7/crossterm/event/index.html
+              // value = match poll(Duration::from_millis(1000)) {
+              //   Ok(true) => match read().unwrap() {
+              //     Event::Key(KeyEvent {
+              //       code: KeyCode::Up,
+              //       modifiers: _,
+              //     }) => 0b0001,
+              //     Event::Key(KeyEvent {
+              //       code: KeyCode::Down,
+              //       modifiers: _,
+              //     }) => 0b0010,
+              //     Event::Key(KeyEvent {
+              //       code: KeyCode::Left,
+              //       modifiers: _,
+              //     }) => 0b0100,
+              //     Event::Key(KeyEvent {
+              //       code: KeyCode::Right,
+              //       modifiers: _,
+              //     }) => 0b1000,
+              //     _ => 0b1111,
+              //   },
+              //   _ => 0b0000,
+              // };
+              // if value != 0b0000 { println!("value is {:b}", value); }
             }
             psh(&mut memory, &mut stack_pointer, value);
             "lda"
@@ -82,7 +112,8 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
           0x12 => {
             let mut address = pop(&mut memory, &mut stack_pointer);
             let value = pop(&mut memory, &mut stack_pointer);
-            if address == 0xFF { stdout.push(value as char); }
+            if address == 0xFF { stdout_buffer.push(value as char); }
+            else if address == 0xFE { /* nop */ }
             else { set(&mut memory, &mut address, value); }
             "sta"
           },
@@ -228,13 +259,13 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
     };
     if last_display_or_stdout_update.elapsed() > Duration::from_millis(1000 / 10) { // ms
       last_display_or_stdout_update = Instant::now();
-      print_display_and_stdout(&display_buffer, &stdout);
+      print_display_and_stdout(&display_buffer, &stdout_buffer);
     }
     if const_debug {
       println!("stack - instruction: {:02x} - {:04x}", stack_pointer, instruction_pointer);
       println!("op_code = mnemonic:  {:02x} = {}", in_byte, mnemonic);
       println!("stack memory slice   {:02x?}", memory.as_slice()[memory.len()-0x18..].to_vec());
-      println!("hex stdout: {:02x?}", stdout.as_bytes());
+      println!("hex stdout: {:02x?}", stdout_buffer.as_bytes());
       println!("");
     }
 
@@ -245,7 +276,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
     // else if const_debug { thread::sleep(Duration::from_millis(50)); }
     thread::sleep(Duration::from_micros(10));
   }
-  print_display_and_stdout(&display_buffer, &stdout);
+  print_display_and_stdout(&display_buffer, &stdout_buffer);
 
 
   // make sure we reached a halt instruction
@@ -271,7 +302,7 @@ fn unary_op<F: Fn(u8) -> u8>(memory: &mut Vec<u8>, stack_pointer: &mut u8, closu
   psh(memory, stack_pointer, closure(operand));
 }
 
-fn print_display_and_stdout(display_buffer: &Vec<u8>, stdout: &String) {
+fn print_display_and_stdout(display_buffer: &Vec<u8>, stdout_buffer: &String) {
   let mut display_buffer_string: String = String::new();
   let line: String = std::iter::repeat("-").take(32).collect::<String>();
   let line_top: String = ".-".to_owned() + &line + "-.\n";
@@ -303,7 +334,7 @@ fn print_display_and_stdout(display_buffer: &Vec<u8>, stdout: &String) {
   }
   display_buffer_string += &line_bottom;
   println!("Display buffer:\n{}", display_buffer_string);
-  println!("Standard output:\n{}", stdout);
+  println!("Standard output:\n{}", stdout_buffer);
 }
 
 fn die(code: usize, instruction_pointer: u16, value: u8) {
