@@ -1,39 +1,44 @@
 # snake game
 
-
-
-
-
-
-
-
-
-
-
-x08 x09 # allocate head position
-x00 # allocate snake length
-x00 x00 # allocate snake direction delta
+x07 x09 # allocate head position
+x01 # allocate snake length
+x00 x00 # allocate snake direction
+# xFF x00 # allocate snake direction
 x00 x00
 lbl $MAIN_LOOP_STEP # main game loop
 
 $SCORE jms $PRINT_STRING drp drp
 ldo x01 jms $PRINT_BYTE_AS_HEX ldo x01 jms $PRINT_BYTE_AS_HEX drp drp
 
-# calculate the new temporary head position by adding the position delta
-# ldo x04 ldo x02 add x0F and sto x04
-# ldo x03 ldo x01 add x0F and sto x03
+# dup inc x0F and nez skp x06 xcc dbg ldo x04 inc sto x04
 
-# hard-coded snake movement and growth
-ldo x06 dec x0F and sto x06
-ldo x05 nop x0F and sto x05
-ldo x04 inc sto x04
+x00 x00 # allocate position delta
+
+# calculate position delta
+drp ldo x03 not
+dup add inc
+ldo x05
+skp x01 swp
+
+# xFE lda
+# nez not skp x01 hlt
+
+# calculate the new head position by adding the position delta
+ldo x08 ldo x02 add x0F and sto x08
+ldo x07 ldo x01 add x0F and sto x07
+
+drp drp # deallocate position delta
+
+# copy snake direction to the new head position
+ldo x03 x00 ldo x08 dup add inc ldo x08 jms $SET_ENCODED drp drp drp drp
+ldo x02 x00 ldo x08 dup add nop ldo x08 jms $SET_ENCODED drp drp drp drp
 
 # clear display buffer
-x00
-lbl $MAIN_LOOP_CLEAR
-dup x00 swp stb
-for x80 $MAIN_LOOP_CLEAR sti
-drp
+# x00
+# lbl $MAIN_LOOP_CLEAR
+# dup x00 swp stb
+# for x80 $MAIN_LOOP_CLEAR sti
+# drp
 
 ldo x06 ldo x06 # allocate temporary head position
 
@@ -42,13 +47,14 @@ lbl $MAIN_LOOP_BODY
 x00 x00 # allocate position delta
 
 # get direction bits
-x00 ldo x04 ldo x04 dup add jms $GET_ENCODED drp drp drp # get first bit (up&down / left&right)
+nop x00 ldo x05 dup add nop ldo x05 jms $GET_ENCODED drp drp drp # get first bit (up&down / left&right)
 dup add inc
-x00 x00 ldo x04 ldo x04 dup add jms $GET_ENCODED drp drp drp # get second bit (up / down or left / right)
+x00 x00 ldo x06 dup add inc ldo x06 jms $GET_ENCODED drp drp drp # get second bit (up / down or left / right)
 skp x01 swp
+# drp drp x00 x00 # HACK
 
 xFF xFF ldo x06 dup add ldo x06 dup add jms $SET_ENCODED # display a pixel at the head position
-drp ldo x04 add ldo x06 dup add ldo x04 add jms $SET_ENCODED # display a pixel at the head position with the delta
+# drp ldo x04 add ldo x06 dup add ldo x04 add jms $SET_ENCODED # display a pixel at the head position with the delta
 drp drp drp drp
 
 # calculate the new temporary head position by adding the position delta
@@ -59,6 +65,8 @@ drp drp # deallocate position delta
 for x01 $MAIN_LOOP_BODY sti # loop while the snake length is not zero
 drp
 
+x00 xFF ldo x03 dup add ldo x03 dup add jms $SET_ENCODED # clear a pixel at the final head position (tail position)
+drp drp drp drp
 drp drp # deallocate temporary head position
 
 x01 adc $MAIN_LOOP_STEP sti
