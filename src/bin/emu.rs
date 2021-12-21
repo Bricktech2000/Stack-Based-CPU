@@ -3,7 +3,7 @@ extern crate crossterm;
 use std::env;
 use std::fs;
 use std::io;
-use std::thread;
+// use std::thread;
 use std::io::prelude::*;
 use std::time::{Duration, Instant};
 
@@ -274,7 +274,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
     // delay the execution of the instructions if debug is enabled
     if const_step { pause(); }
     // else if const_debug { thread::sleep(Duration::from_millis(50)); }
-    thread::sleep(Duration::from_micros(10));
+    // thread::sleep(Duration::from_micros(10));
   }
   print_display_and_stdout(&display_buffer, &stdout_buffer);
 
