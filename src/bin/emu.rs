@@ -52,14 +52,14 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
         match op_code {
           0x00 => { "nop" },
           0x01 => {
-            instruction_pointer += 1;
+            instruction_pointer = safe_instruction_pointer(instruction_pointer, in_bytes.len(), instruction_pointer + 1);
             let value = in_bytes[instruction_pointer as usize];
             psh(&mut memory, &mut stack_pointer, value);
             "xXX"
           },
           0x02 => { "hlt"; break; },
           0x03 => {
-            instruction_pointer += 2;
+            instruction_pointer = safe_instruction_pointer(instruction_pointer, in_bytes.len(), instruction_pointer + 2);
             psh(&mut memory, &mut stack_pointer, in_bytes[instruction_pointer as usize] as u8);
             psh(&mut memory, &mut stack_pointer, in_bytes[instruction_pointer as usize - 1] as u8);
             "xXX xXX"
@@ -125,7 +125,8 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
             "ldi"
           },
           0x16 => {
-            instruction_pointer = (pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8) - 1;
+            let new_ip = (pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8) - 1;
+            instruction_pointer = safe_instruction_pointer(instruction_pointer, in_bytes.len(), new_ip);
             "sti"
           },
           0x17 => {
@@ -224,7 +225,9 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
                 0b0 => {
                   let offset = low_3_bits;
                   let condition = pop(&mut memory, &mut stack_pointer);
-                  if condition == const_true { instruction_pointer += offset as u16; }
+                  if condition == const_true {
+                    instruction_pointer = safe_instruction_pointer(instruction_pointer, in_bytes.len(), instruction_pointer + offset as u16);
+                  }
                   else if condition != const_false { die(0x03, instruction_pointer, condition); }
                   "skp"
                 },
@@ -292,7 +295,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
       println!("");
     }
 
-    instruction_pointer += 1;
+    instruction_pointer = safe_instruction_pointer(instruction_pointer, in_bytes.len(), instruction_pointer + 1);
 
     // delay the execution of the instructions if debug is enabled
     if const_step { pause(); }
@@ -324,6 +327,16 @@ fn unary_op<F: Fn(u8) -> u8>(memory: &mut Vec<u8>, stack_pointer: &mut u8, closu
   let operand = pop(memory, stack_pointer);
   psh(memory, stack_pointer, closure(operand));
 }
+
+fn safe_instruction_pointer(instruction_pointer: u16, program_memory_length: usize, new_ip: u16) -> u16 {
+  if new_ip == program_memory_length as u16 + 1 {
+    die(0x06, instruction_pointer, 0x00); 
+  } else if new_ip > program_memory_length as u16 {
+    die(0x07, instruction_pointer, new_ip as u8); 
+  };
+  new_ip
+}
+
 
 fn print_display_and_stdout(display_buffer: &Vec<u8>, stdout_buffer: &String) {
   let mut display_buffer_string: String = String::new();
@@ -369,6 +382,7 @@ fn die(code: usize, instruction_pointer: u16, value: u8) {
     "Invalid Operand: ",
     "Stack does not contain exit code ",
     "Halt instruction was not reached ",
+    "Invalid Instruction Pointer: "
   ][code];
 
   println!("Fatal Error at {:02x}: {}{:02x}.", instruction_pointer, message, value);

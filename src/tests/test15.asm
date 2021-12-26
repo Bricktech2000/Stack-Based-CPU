@@ -96,7 +96,7 @@ x01 adc $MAIN_LOOP_STEP sti
 # gets the encoded value of the cell at x, y through bit manipulation
 lbl $GET_ENCODED # bool = get_encoded(is_display, x, y); x < 0x10, y < 0x10, bool = [0x00, 0xFF], is_display = [0x00, 0xFF]
 jms $GET_MAGIC_VALUES
-swp shr x00 x01 and # get the right bit based on the lower 3 bits of the x coordinate
+shr x00 x01 and # get the right bit based on the lower 3 bits of the x coordinate
 ldo x09 sub sto x08 # return `bool` from the subroutine (by subtracting it from the space allocated for the return value)
 drp # drop the extra pointer to the buffer
 drp drp # drop the return address of GET_MAGIC_VALUES
