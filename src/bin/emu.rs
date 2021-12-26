@@ -242,10 +242,33 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
                 },
                 0b1 => {
                   let mut count = low_3_bits;
-                  let value = pop(&mut memory, &mut stack_pointer);
                   if count == 0x00 { count = pop(&mut memory, &mut stack_pointer); }
+                  let value = pop(&mut memory, &mut stack_pointer);
                   psh(&mut memory, &mut stack_pointer, value >> count);
                   "shr"
+                },
+                _ => { die(0x01, instruction_pointer, in_byte); "unk" },
+              }
+            },
+            0b10 => {
+              match bit3 {
+                0b0 => {
+                  let mut count = low_3_bits;
+                  if count == 0x00 { count = pop(&mut memory, &mut stack_pointer); }
+                  let value = pop(&mut memory, &mut stack_pointer);
+                  let carry = pop(&mut memory, &mut stack_pointer);
+                  psh(&mut memory, &mut stack_pointer, carry + value >> (8 - count));
+                  psh(&mut memory, &mut stack_pointer, value << count);
+                  "slc"
+                },
+                0b1 => {
+                  let mut count = low_3_bits;
+                  if count == 0x00 { count = pop(&mut memory, &mut stack_pointer); }
+                  let value = pop(&mut memory, &mut stack_pointer);
+                  let carry = pop(&mut memory, &mut stack_pointer);
+                  psh(&mut memory, &mut stack_pointer, carry + value << (8 - count));
+                  psh(&mut memory, &mut stack_pointer, value >> count);
+                  "src"
                 },
                 _ => { die(0x01, instruction_pointer, in_byte); "unk" },
               }

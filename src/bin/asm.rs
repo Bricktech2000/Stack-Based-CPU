@@ -100,7 +100,7 @@ fn assemble_recursive(tokens: Vec<&str>, offset: usize, label_to_value: &mut Has
       "xor" => { out_bytes.push(0x33) },
       "xnd" => { out_bytes.push(0x34) },
 
-      "sto" | "ldo" | "skp" | "shl" | "shr" => {
+      "sto" | "ldo" | "skp" | "shl" | "shr" | "slc" | "src" => {
         index += 1;
         let op_code = match current_token {
           "sto" => 0x40,
@@ -108,6 +108,8 @@ fn assemble_recursive(tokens: Vec<&str>, offset: usize, label_to_value: &mut Has
           "skp" => 0xC0, // TODO: could overflow
           "shl" => 0xD0, // TODO: could overflow
           "shr" => 0xD8, // TODO: could overflow
+          "slc" => 0xE0, // TODO: could overflow
+          "src" => 0xE8, // TODO: could overflow
           _ => { die(0x05, current_token); 0x00 },
         };
         let current_token = tokens[index];
@@ -160,8 +162,10 @@ fn assemble_recursive(tokens: Vec<&str>, offset: usize, label_to_value: &mut Has
 
 fn get_immediate(current_token: &str) -> Result<u8, usize> {
   let hex_str = &current_token[1..];
-  let hex_num = u8::from_str_radix(hex_str, 16).expect("Unable to parse hex.");
-  Ok(hex_num)
+  match u8::from_str_radix(hex_str, 16) {
+    Ok(value) => Ok(value),
+    Err(_) => Err(0x06),
+  }
 }
 
 fn die(code: usize, value: &str) {
@@ -172,6 +176,7 @@ fn die(code: usize, value: &str) {
     "Invalid Instruction: ",
     "Label Not Found: ",
     "Internal Error: Unknown opcode: ",
+    "Unable to parse hex: ",
   ][code];
 
   println!("Fatal Error: {}{}.", message, value);
