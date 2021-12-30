@@ -2,6 +2,11 @@
 
 A custom stack-based CPU architecture
 
+# Dependencies
+
+- [`cargo`](https://crates.io/crates/cargo)
+- [`crossterm`](https://crates.io/crates/crossterm)
+
 ## Running a Sample Program
 
 Execute the following command to run Conway's Game of Life.
