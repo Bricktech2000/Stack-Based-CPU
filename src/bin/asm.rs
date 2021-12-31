@@ -121,7 +121,7 @@ fn assemble_recursive(tokens: Vec<&str>, offset: usize, label_to_value: &mut Has
           Err(code) => die(code, current_token),
         }
       },
-      //TODO: shifts
+      //TODO: arithmetic shifts
 
       "lbl" => {
         index += 1;

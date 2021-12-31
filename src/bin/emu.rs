@@ -126,11 +126,13 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
           },
           0x16 => {
             let new_ip = (pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8) - 1;
+            // TODO: can cause out of bounds error
             instruction_pointer = safe_instruction_pointer(instruction_pointer, in_bytes.len(), new_ip);
             "sti"
           },
           0x17 => {
             let address = pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8;
+            // TODO: can cause out of bounds error
             psh(&mut memory, &mut stack_pointer, in_bytes[address as usize]);
             "ldp"
           },
@@ -168,19 +170,19 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
           0x20 => { binary_op(&mut memory, &mut stack_pointer, |a, b| a + b); "add" },
           0x21 => {
             let operand1 = pop(&mut memory, &mut stack_pointer) as u16;
-            let operand2 = (pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8) - 1;
-            let result = operand1 + operand2;
-            psh(&mut memory, &mut stack_pointer, ((result + 1) >> 8) as u8);
-            psh(&mut memory, &mut stack_pointer, ((result + 1) & 0xFF) as u8);
+            let operand2 = pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8;
+            let result = operand2 + operand1;
+            psh(&mut memory, &mut stack_pointer, (result >> 8) as u8);
+            psh(&mut memory, &mut stack_pointer, (result & 0xFF) as u8);
             "adc"
           },
           0x22 => { binary_op(&mut memory, &mut stack_pointer, |a, b| a - b); "sub" },
           0x23 => {
             let operand1 = pop(&mut memory, &mut stack_pointer) as u16;
-            let operand2 = (pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8) - 1;
-            let result = operand1 - operand2;
-            psh(&mut memory, &mut stack_pointer, ((result + 1) >> 8) as u8);
-            psh(&mut memory, &mut stack_pointer, ((result + 1) & 0xFF) as u8);
+            let operand2 = pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8;
+            let result = operand2 - operand1;
+            psh(&mut memory, &mut stack_pointer, (result >> 8) as u8);
+            psh(&mut memory, &mut stack_pointer, (result & 0xFF) as u8);
             "sbc"
           },
           0x24 => { unary_op(&mut memory, &mut stack_pointer, |a| a + 1); "inc" },
@@ -393,6 +395,7 @@ fn die(code: usize, instruction_pointer: u16, value: u8) {
 
 // https://users.rust-lang.org/t/rusts-equivalent-of-cs-system-pause/4494/3
 fn pause() {
+  // return;
   let mut stdin = io::stdin();
   let mut stdout = io::stdout();
   // We want the cursor to stay at the end of the line, so we print without a newline and flush manually.
