@@ -56,3 +56,6 @@ https://docs.rs/crossterm/0.17.7/crossterm/event/index.html
 https://stackoverflow.com/questions/42917566/what-is-this-question-mark-operator-about
 https://docs.rs/crossterm/0.17.7/crossterm/event/struct.EventStream.html
 
+binary-to-decimal converter:
+https://youtu.be/v3-a-zqKfgA
+
