@@ -306,6 +306,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
 
 
   // make sure we reached a halt instruction
+  if in_bytes.len() ==  0 { die(0x06, instruction_pointer, 0x00); }
   if in_bytes[instruction_pointer as usize] != 0x02 { die(0x06, instruction_pointer, 0x00); }
   // make sure only one value is left on the stack
   if stack_pointer != -1i8 as u8 { die(0x05, instruction_pointer, stack_pointer); }
