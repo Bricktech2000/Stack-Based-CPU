@@ -5,11 +5,10 @@ x00 x00 x06 xC1 jms $PRINT_4_BYTES_AS_DEC drp drp drp drp
 x00 hlt
 
 
-# print the 4-byte argument as decimal. the base used must be less than one byte large (0xFF, or 255).
+# prints the 4-byte argument as decimal. the base used must be less than one byte large (0xFF, or 255).
 lbl $PRINT_4_BYTES_AS_DEC # void print_4_bytes_as_dec(bytes[4])
 
 x10 x10 x10 x10 x10 # allocate 5-character buffer on the stack
-
 x00 x00 x00 x00 # allocate mod10
 ldo x0E ldo x0E ldo x0E ldo x0E # allocate div10
 
