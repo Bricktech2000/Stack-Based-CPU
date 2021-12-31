@@ -8,8 +8,10 @@ x00 hlt
 # print the 4-byte argument as decimal. the base used must be less than one byte large (0xFF, or 255).
 lbl $PRINT_4_BYTES_AS_DEC # void print_4_bytes_as_dec(bytes[4])
 
+x10 x10 x10 x10 x10 # allocate 5-character buffer on the stack
+
 x00 x00 x00 x00 # allocate mod10
-ldo x09 ldo x09 ldo x09 ldo x09 # allocate div10
+ldo x0E ldo x0E ldo x0E ldo x0E # allocate div10
 
 lbl $PRINT_4_BYTES_AS_DEC_LOOP
 
@@ -42,8 +44,14 @@ drp # drop the last carry bit
 for x21 $PRINT_4_BYTES_AS_DEC_DIVISION sti # loop back to next divisionn 32 times as there are 32 bits in 4 bytes
 drp
 
-# print the least significant byte of mod10 to stdout (shifted right by 1 bit)
-$HEX_DIGITS ldo x06 shr x01 adc ldp xFF sta
+# add the least significant byte of mod10 (shifted right by 1) to the character buffer
+ldo x0B sto x0C
+ldo x0A sto x0B
+ldo x09 sto x0A
+ldo x08 sto x09
+ldo x04 shr x01 sto x08
+
+# $HEX_DIGITS ldo x06 shr x01 adc ldp xFF sta
 # clear the least significant byte of mod10
 x00 sto x04
 # while div10 is not zero, loop back to the next division
@@ -51,7 +59,13 @@ ldo x03 ldo x03 ldo x03 ldo x03 oor oor oor nez not skp x04 $PRINT_4_BYTES_AS_DE
 # otherwise,
 drp drp drp drp # drop div10
 drp drp drp drp # drop mod10
+# print the 5-character buffer to stdout
+$HEX_DIGITS ldo x02 adc ldp xFF sta drp
+$HEX_DIGITS ldo x02 adc ldp xFF sta drp
+$HEX_DIGITS ldo x02 adc ldp xFF sta drp
+$HEX_DIGITS ldo x02 adc ldp xFF sta drp
+$HEX_DIGITS ldo x02 adc ldp xFF sta drp
 rts # return from subroutine
 
 lbl $HEX_DIGITS
-p30 p31 p32 p33 p34 p35 p36 p37 p38 p39 p41 p42 p43 p44 p45 p46
+p30 p31 p32 p33 p34 p35 p36 p37 p38 p39 p41 p42 p43 p44 p45 p46 p20
