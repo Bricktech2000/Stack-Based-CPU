@@ -1,86 +1,76 @@
-opcodes:
-  0 0 :
-      0x00 : nop : no operation
-      0x01 : x00 : load 8-bit immediate to stack
-      0x02 : hlt : halt and return value on top of the stack
-      0x03 : x00 x00 : load 16-bit immediate to stack
-      0x0F : dbg : enable emulator step-by-step debugging
+Instructioon Set
+================
 
-      0x11 : lda : load value from memory address to stack (0xFF is stdin, 0xFE is PORTA
-      0x12 : sta : store value to memory address from stack (0xFF is stdout, 0xFE is PORTA)
-      0x13 : lds : load stack pointer to stack
-      0x14 : sts : store stack pointer from stack
-      0x15 : ldi : load instruction pointer to stack
-      0x16 : sti : store instruction pointer from stack
-      0x17 : ldp : load from program memory to stack
-      0x18 : stp : store to program memory from  stack
-      0x19 : ldb : load from display buffer to stack
-      0x1A : stb : store to display buffer from stack
-      0x1B : dup : duplicate value on stack
-      0x1C : drp : drop value from stack
-      0x1D : swp : swap two values on stack
+instructions operating on the stack
+-----------------------------------
 
-      0x20 : add : addition
-      0x21 : adc : addition with carry (increments thrid byte on overflow)
-      0x22 : sub : subtraction
-      0x23 : sbc : subtraction with borrow (decrements thrid byte on underflow)
-      0x24 : inc : increment
-      0x25 : dec : decrement
-      0x26 : ilt : is less than
-      0x27 : igt : is greater than
-      0x28 : ieq : is equal
-      0x29 : nez : is not equal to zero
-      0x2A : neg : signed negation
-      0x2B : abs : signed absolute value
+0 0 :
+    0x00 : nop : no operation
+    0x01 : x00 : load 8-bit immediate to stack
+    0x02 : hlt : halt and return value on top of the stack
+    0x03 : x00 x00 : load 16-bit immediate to stack
+    0x0F : dbg : enable emulator step-by-step debugging
 
-      0x30 : not : bitwise not
-      0x31 : oor : bitwise or
-      0x32 : and : bitwise and
-      0x33 : xor : bitwise exclusive or
-      0x34 : xnd : bitwise exclusive and
-  0 1 : sto : store to offset from stack pointer
-  1 0 : ldo : load from offset from stack pointer
-  1 1 :
-      0 1 : shift
-          0 : shl : shift left with 3-bit-value
-          1 : shr : shift right with 3-bit-value
-      1 0 : shift with carry
-          0 : slc : carry shift left with 3-bit-value
-          1 : src : carry shift right with 3-bit-value
-      0 0 : arithmetic shift
-          0 : skp : conditional skip with 3-bit-value
-          1 : sra : arithmetic shift right with 3-bit-value
-      1 1 : load 4-bit immediate to stack
+    0x11 : lda : load value from memory address to stack (0xFF is stdin, 0xFE is PORTA
+    0x12 : sta : store value to memory address from stack (0xFF is stdout, 0xFE is PORTA)
+    0x13 : lds : load stack pointer to stack
+    0x14 : sts : store stack pointer from stack
+    0x15 : ldi : load instruction pointer to stack
+    0x16 : sti : store instruction pointer from stack
+    0x17 : ldp : load from program memory to stack
+    0x18 : stp : store to program memory from  stack
+    0x19 : ldb : load from display buffer to stack
+    0x1A : stb : store to display buffer from stack
+    0x1B : dup : duplicate value on stack
+    0x1C : drp : drop value from stack
+    0x1D : swp : swap two values on stack
 
+    0x20 : add : addition
+    0x21 : adc : addition with carry (increments thrid byte on overflow)
+    0x22 : sub : subtraction
+    0x23 : sbc : subtraction with borrow (decrements thrid byte on underflow)
+    0x24 : inc : increment
+    0x25 : dec : decrement
+    0x26 : ilt : is less than
+    0x27 : igt : is greater than
+    0x28 : ieq : is equal
+    0x29 : nez : is not equal to zero
+    0x2A : neg : signed negation
+    0x2B : abs : signed absolute value
 
-true: 0xFF
+    0x30 : not : bitwise not
+    0x31 : oor : bitwise or
+    0x32 : and : bitwise and
+    0x33 : xor : bitwise exclusive or
+    0x34 : xnd : bitwise exclusive and
 
-false: 0x00
+instructions with operands
+--------------------------
 
-
-other (not implemented yet):
-  syscalls / interrupts?
-  timers?
-
+0 1 : sto : store to offset from stack pointer
+1 0 : ldo : load from offset from stack pointer
+1 1 :
+    0 1 : shift
+        0 : shl : shift left with 3-bit-value
+        1 : shr : shift right with 3-bit-value
+    1 0 : shift with carry
+        0 : slc : carry shift left with 3-bit-value
+        1 : src : carry shift right with 3-bit-value
+    0 0 : arithmetic shift
+        0 : skp : conditional skip with 3-bit-value
+        1 : sra : arithmetic shift right with 3-bit-value
+    1 1 : load 4-bit immediate to stack
 
 
+constants
+---------
+
+0xFF : true
+0x00 : false
 
 
+ideas (not implemented)
+-----------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+syscalls / interrupts?
+timers?
