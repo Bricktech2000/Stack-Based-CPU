@@ -1,13 +1,8 @@
-extern crate crossterm;
-
 use std::env;
 use std::fs;
 use std::io;
-// use std::thread;
 use std::io::prelude::*;
 use std::time::{Duration, Instant};
-
-// use crossterm::event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers};
 
 fn main() {
   let args: Vec<String> = env::args().collect();
@@ -79,32 +74,8 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
               std::io::stdin().read_line(&mut line).unwrap();
               stdout_buffer += line.as_str();
               value = line.as_bytes()[0];
-            // } else if address == 0xFE {
-              // https://stackoverflow.com/questions/60130532/detect-keydown
-              // https://docs.rs/crossterm/0.17.7/crossterm/event/index.html
-              // value = match poll(Duration::from_millis(1000)) {
-              //   Ok(true) => match read().unwrap() {
-              //     Event::Key(KeyEvent {
-              //       code: KeyCode::Up,
-              //       modifiers: _,
-              //     }) => 0b0001,
-              //     Event::Key(KeyEvent {
-              //       code: KeyCode::Down,
-              //       modifiers: _,
-              //     }) => 0b0010,
-              //     Event::Key(KeyEvent {
-              //       code: KeyCode::Left,
-              //       modifiers: _,
-              //     }) => 0b0100,
-              //     Event::Key(KeyEvent {
-              //       code: KeyCode::Right,
-              //       modifiers: _,
-              //     }) => 0b1000,
-              //     _ => 0b1111,
-              //   },
-              //   _ => 0b0000,
-              // };
-              // if value != 0b0000 { println!("value is {:b}", value); }
+            } else if address == 0xFE {
+              /* TODO: implement keyboard events */
             }
             psh(&mut memory, &mut stack_pointer, value);
             "lda"
@@ -126,17 +97,20 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
           },
           0x16 => {
             let new_ip = (pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8) - 1;
-            // TODO: can cause out of bounds error
+            // TODO: could cause out of bounds error
             instruction_pointer = safe_instruction_pointer(instruction_pointer, in_bytes.len(), new_ip);
             "sti"
           },
           0x17 => {
             let address = pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8;
-            // TODO: can cause out of bounds error
+            // TODO: could cause out of bounds error
             psh(&mut memory, &mut stack_pointer, in_bytes[address as usize]);
             "ldp"
           },
-          // 0x18
+          0x18 => {
+            die(0x08, instruction_pointer, 0x00);
+            "stp"
+          }
           0x19 => {
             let address = pop(&mut memory, &mut stack_pointer);
             let value = display_buffer[address as usize];
@@ -385,7 +359,8 @@ fn die(code: usize, instruction_pointer: u16, value: u8) {
     "Invalid Operand: ",
     "Stack does not contain exit code ",
     "Halt instruction was not reached ",
-    "Invalid Instruction Pointer: "
+    "Invalid Instruction Pointer: ",
+    "Invalid Instruction: stp ",
   ][code];
 
   println!("Fatal Error at {:02x}: {}{:02x}.", instruction_pointer, message, value);
@@ -395,7 +370,6 @@ fn die(code: usize, instruction_pointer: u16, value: u8) {
 
 // https://users.rust-lang.org/t/rusts-equivalent-of-cs-system-pause/4494/3
 fn pause() {
-  // return;
   let mut stdin = io::stdin();
   let mut stdout = io::stdout();
   // We want the cursor to stay at the end of the line, so we print without a newline and flush manually.
