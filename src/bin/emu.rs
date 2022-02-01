@@ -75,7 +75,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
               stdout_buffer += line.as_str();
               value = line.as_bytes()[0];
             } else if address == 0xFE {
-              /* TODO: implement keyboard events */
+              // TODO: implement keyboard events
             }
             psh(&mut memory, &mut stack_pointer, value);
             "lda"
@@ -97,13 +97,11 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
           },
           0x16 => {
             let new_ip = (pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8) - 1;
-            // TODO: could cause out of bounds error
             instruction_pointer = safe_instruction_pointer(instruction_pointer, in_bytes.len(), new_ip);
             "sti"
           },
           0x17 => {
             let address = pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8;
-            // TODO: could cause out of bounds error
             psh(&mut memory, &mut stack_pointer, in_bytes[address as usize]);
             "ldp"
           },
@@ -141,7 +139,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
             "swp"
           },
 
-          0x20 => { binary_op(&mut memory, &mut stack_pointer, |a, b| a + b); "add" },
+          0x20 => { binary_op(&mut memory, &mut stack_pointer, |a, b| u8::wrapping_add(a, b)); "add" },
           0x21 => {
             let operand1 = pop(&mut memory, &mut stack_pointer) as u16;
             let operand2 = pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8;
@@ -150,7 +148,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
             psh(&mut memory, &mut stack_pointer, (result & 0xFF) as u8);
             "adc"
           },
-          0x22 => { binary_op(&mut memory, &mut stack_pointer, |a, b| a - b); "sub" },
+          0x22 => { binary_op(&mut memory, &mut stack_pointer, |a, b| u8::wrapping_sub(a, b)); "sub" },
           0x23 => {
             let operand1 = pop(&mut memory, &mut stack_pointer) as u16;
             let operand2 = pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8;
@@ -159,8 +157,8 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
             psh(&mut memory, &mut stack_pointer, (result & 0xFF) as u8);
             "sbc"
           },
-          0x24 => { unary_op(&mut memory, &mut stack_pointer, |a| a + 1); "inc" },
-          0x25 => { unary_op(&mut memory, &mut stack_pointer, |a| a - 1); "dec" },
+          0x24 => { unary_op(&mut memory, &mut stack_pointer, |a| u8::wrapping_add(a,  1)); "inc" },
+          0x25 => { unary_op(&mut memory, &mut stack_pointer, |a| u8::wrapping_sub(a, 1)); "dec" },
           0x26 => { binary_op(&mut memory, &mut stack_pointer, |a, b| (a < b) as u8 * const_true); "ilt" },
           0x27 => { binary_op(&mut memory, &mut stack_pointer, |a, b| (a > b) as u8 * const_true); "igt" },
           0x28 => { binary_op(&mut memory, &mut stack_pointer, |a, b| (a == b) as u8 * const_true); "ieq" },
@@ -289,8 +287,8 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
   *memory.last().unwrap()
 }
 
-fn psh(memory: &mut Vec<u8>, stack_pointer: &mut u8, value: u8) { *stack_pointer -= 1; memory[*stack_pointer as usize] = value; }
-fn pop(memory: &mut Vec<u8>, stack_pointer: &mut u8) -> u8 { let temp: u8 = memory[*stack_pointer as usize]; memory[*stack_pointer as usize] = 0; *stack_pointer += 1; temp }
+fn psh(memory: &mut Vec<u8>, stack_pointer: &mut u8, value: u8) { *stack_pointer = u8::wrapping_sub(*stack_pointer, 1); memory[*stack_pointer as usize] = value; }
+fn pop(memory: &mut Vec<u8>, stack_pointer: &mut u8) -> u8 { let temp: u8 = memory[*stack_pointer as usize]; memory[*stack_pointer as usize] = 0; *stack_pointer = u8::wrapping_add(*stack_pointer, 1); temp }
 fn set(memory: &mut Vec<u8>, pointer: &mut u8, value: u8) { memory[*pointer as usize] = value; }
 fn get(memory: &mut Vec<u8>, pointer: &mut u8) -> u8 { memory[*pointer as usize] }
 
