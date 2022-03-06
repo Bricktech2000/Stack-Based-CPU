@@ -32,7 +32,6 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
   let mut display_buffer: Vec<u8> = vec![0u8; const_mem_size]; // display buffer
   let mut stack_pointer: u8 = 0; // CPU stack pointer
   let mut instruction_pointer: u16 = 0; // CPU instruction pointer
-  let mut carry_bit: u8 = 0; // CPU carry bit
   let mut stdout_buffer: String = String::new(); // stdout buffer for debugging
   let mut last_display_or_stdout_update = Instant::now(); // las time the display buffer or stdout was updated
 
@@ -107,10 +106,8 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
             "ldp"
           },
           0x18 => {
-            let value = pop(&mut memory, &mut stack_pointer);
-            if value == 0x00 || value == 0x01 { carry_bit = value; }
-            else { die(0x08, instruction_pointer, value); };
-            "stc"
+            die(0x08, instruction_pointer, 0x00);
+            "stp"
           }
           0x19 => {
             let address = pop(&mut memory, &mut stack_pointer);
@@ -145,19 +142,19 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
           0x20 => { binary_op(&mut memory, &mut stack_pointer, |a, b| u8::wrapping_add(a, b)); "add" },
           0x21 => {
             let operand1 = pop(&mut memory, &mut stack_pointer) as u16;
-            let operand2 = pop(&mut memory, &mut stack_pointer) as u16;
-            let result = operand2 + operand1 + carry_bit as u16;
+            let operand2 = pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8;
+            let result = operand2 + operand1;
+            psh(&mut memory, &mut stack_pointer, (result >> 8) as u8);
             psh(&mut memory, &mut stack_pointer, (result & 0xFF) as u8);
-            carry_bit = ((result >> 8) & 1) as u8;
             "adc"
           },
           0x22 => { binary_op(&mut memory, &mut stack_pointer, |a, b| u8::wrapping_sub(a, b)); "sub" },
           0x23 => {
             let operand1 = pop(&mut memory, &mut stack_pointer) as u16;
             let operand2 = pop(&mut memory, &mut stack_pointer) as u16 | (pop(&mut memory, &mut stack_pointer) as u16) << 8;
-            let result = operand2 - operand1 - carry_bit as u16;
+            let result = operand2 - operand1;
+            psh(&mut memory, &mut stack_pointer, (result >> 8) as u8);
             psh(&mut memory, &mut stack_pointer, (result & 0xFF) as u8);
-            carry_bit = ((result >> 8) & 1) as u8;
             "sbc"
           },
           0x24 => { unary_op(&mut memory, &mut stack_pointer, |a| u8::wrapping_add(a,  1)); "inc" },
@@ -281,6 +278,7 @@ fn emulate(in_bytes: Vec<u8>) -> u8 {
   }
   print_display_and_stdout(&display_buffer, &stdout_buffer);
 
+
   // make sure we reached a halt instruction
   if in_bytes.len() ==  0 { die(0x06, instruction_pointer, 0x00); }
   if in_bytes[instruction_pointer as usize] != 0x02 { die(0x06, instruction_pointer, 0x00); }
@@ -360,7 +358,7 @@ fn die(code: usize, instruction_pointer: u16, value: u8) {
     "Stack does not contain exit code ",
     "Halt instruction was not reached ",
     "Invalid Instruction Pointer: ",
-    "Invalid Carry Bit Value: ",
+    "Invalid Instruction: stp ",
   ][code];
 
   println!("Fatal Error at {:02x}: {}{:02x}.", instruction_pointer, message, value);

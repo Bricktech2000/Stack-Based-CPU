@@ -70,7 +70,7 @@ drp
 
 # game of life rules
 dup x03 ieq xFF ldo x03 ldo x05 # if 3 neighbours, set the cell to alive. otherwise, set it to dead
-ldo x04 x02 ieq not skp x0D jms $GET_ENCODED x00 sto x02 jms $SET_ENCODED # exception: if the cell has 2 neighbours, do not take action
+ldo x04 x02 ieq not skp x07 jms $GET_ENCODED x00 sto x02 jms $SET_ENCODED # exception: if the cell has 2 neighbours, do not take action
 drp drp drp drp
 
 drp # deallocate room for neighbor count
@@ -86,7 +86,7 @@ dup dup lda swp stb
 for x80 $MAIN_LOOP_N sti
 drp
 
-x00 stc x01 adc swp x00 adc swp $MAIN_LOOP_STEP sti
+x01 adc $MAIN_LOOP_STEP sti
 
 
 
@@ -123,17 +123,17 @@ ldo x04 ldo x04 rts
 
 # sends a string to stdout
 lbl $PRINT_STRING # print_string(length, [char])
-# x00 # set index to 0
-# lbl $PRINT_STRING_LOOP # for loop
-# ldo x04 ldo x04 ldo x02 adc x01 adc ldp # load character from program memory
-# xFF sta # send current character to stdout
-# inc ldo x04 ldo x04 ldp ldo x01 ieq skp x0A $PRINT_STRING_LOOP sti # loop back if index is not equal to the length of the string
-# drp # otherwise, drop the index and return from subroutine
+x00 # set index to 0
+lbl $PRINT_STRING_LOOP # for loop
+ldo x04 ldo x04 ldo x02 adc x01 adc ldp # load character from program memory
+xFF sta # send current character to stdout
+inc ldo x04 ldo x04 ldp ldo x01 ieq skp x04 $PRINT_STRING_LOOP sti # loop back if index is not equal to the length of the string
+drp # otherwise, drop the index and return from subroutine
 rts
 
 lbl $PRINT_BYTE_AS_HEX
-# $HEX_DIGITS ldo x04 shr x04 adc ldp xFF sta
-# $HEX_DIGITS ldo x04 x0F and adc ldp xFF sta
+$HEX_DIGITS ldo x04 shr x04 adc ldp xFF sta
+$HEX_DIGITS ldo x04 x0F and adc ldp xFF sta
 rts
 
 
@@ -149,10 +149,11 @@ lbl $PRINT_4_BYTES_AS_DEC_LOOP
 x00 # allocate counter
 lbl $PRINT_4_BYTES_AS_DEC_DIVISION
 
+x01 # set the carry bit
 # subtract with borrow 10 from the least significant byte of mod10
-x00 stc ldo x05 x0A sbc x00 x00 adc nez neg swp
+ldo x06 x0A sbc
 # run the positive-negative check
-ldo x01 nez skp x0A $PRINT_4_BYTES_AS_DEC_IGNORE_STORE sti
+ldo x01 nez skp x04 $PRINT_4_BYTES_AS_DEC_IGNORE_STORE sti
 # if the result is positive, store it back into mod10 and set the carry bit to 0
 sto x06
 xFF skp x01 # ignore the drop instruction below
@@ -185,17 +186,16 @@ ldo x04 shr x01 sto x08
 # clear the least significant byte of mod10
 x00 sto x04
 # while div10 is not zero, loop back to the next division
-ldo x03 ldo x03 ldo x03 ldo x03 oor oor oor nez not skp x0A $PRINT_4_BYTES_AS_DEC_LOOP sti
+ldo x03 ldo x03 ldo x03 ldo x03 oor oor oor nez not skp x04 $PRINT_4_BYTES_AS_DEC_LOOP sti
 # otherwise,
 drp drp drp drp # drop div10
 drp drp drp drp # drop mod10
 # print the 5-character buffer to stdout
-x00 stc
-$HEX_DIGITS ldo x02 adc swp x00 adc swp ldp xFF sta drp
-$HEX_DIGITS ldo x02 adc swp x00 adc swp ldp xFF sta drp
-$HEX_DIGITS ldo x02 adc swp x00 adc swp ldp xFF sta drp
-$HEX_DIGITS ldo x02 adc swp x00 adc swp ldp xFF sta drp
-$HEX_DIGITS ldo x02 adc swp x00 adc swp ldp xFF sta drp
+$HEX_DIGITS ldo x02 adc ldp xFF sta drp
+$HEX_DIGITS ldo x02 adc ldp xFF sta drp
+$HEX_DIGITS ldo x02 adc ldp xFF sta drp
+$HEX_DIGITS ldo x02 adc ldp xFF sta drp
+$HEX_DIGITS ldo x02 adc ldp xFF sta drp
 rts # return from subroutine
 
 
