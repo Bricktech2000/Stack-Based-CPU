@@ -63,7 +63,7 @@ fn assemble_recursive(tokens: Vec<&str>, offset: usize, label_to_value: &mut Has
       "nop" => { out_bytes.push(0x00) },
       "hlt" => { out_bytes.push(0x02) },
       "dbg" => { out_bytes.push(0x0F) },
-      "jms" => { index += 1; out_bytes.append(&mut assemble_recursive(vec!["ldi", "x06", "adc", tokens[index], "sti"], out_bytes.len(), label_to_value, mention_to_label)) },
+      "jms" => { index += 1; out_bytes.append(&mut assemble_recursive(vec!["ldi", "x00", "stc", "x0C", "adc", "swp", "x00", "adc", "swp", tokens[index], "sti"], out_bytes.len(), label_to_value, mention_to_label)) },
       "rts" => { out_bytes.append(&mut assemble_recursive(vec!["sti"], out_bytes.len(), label_to_value, mention_to_label)) },
       "for" => { index += 1; out_bytes.append(&mut assemble_recursive(vec!["inc", "dup", tokens[index], "ieq", "skp", "x04"], out_bytes.len(), label_to_value, mention_to_label)) },
 
@@ -74,7 +74,7 @@ fn assemble_recursive(tokens: Vec<&str>, offset: usize, label_to_value: &mut Has
       "ldi" => { out_bytes.push(0x15) },
       "sti" => { out_bytes.push(0x16) },
       "ldp" => { out_bytes.push(0x17) },
-      "stp" => { out_bytes.push(0x18) },
+      "stc" => { out_bytes.push(0x18) },
       "ldb" => { out_bytes.push(0x19) },
       "stb" => { out_bytes.push(0x1A) },
       "dup" => { out_bytes.push(0x1B) },

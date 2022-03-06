@@ -11,14 +11,14 @@ instructions operating on the stack
     0x03 : x00 x00 : load 16-bit immediate to stack
     0x0F : dbg : enable emulator step-by-step debugging
 
-    0x11 : lda : load value from memory address to stack (0xFF is stdin, 0xFE is PORTA
+    0x11 : lda : load value from memory address to stack (0xFF is stdin, 0xFE is PORTA)
     0x12 : sta : store value to memory address from stack (0xFF is stdout, 0xFE is PORTA)
     0x13 : lds : load stack pointer to stack
     0x14 : sts : store stack pointer from stack
     0x15 : ldi : load instruction pointer to stack
     0x16 : sti : store instruction pointer from stack
     0x17 : ldp : load from program memory to stack
-    0x18 : stp : store to program memory from  stack
+    0x18 : stc : store to carry bit from stack (uses carry bit)
     0x19 : ldb : load from display buffer to stack
     0x1A : stb : store to display buffer from stack
     0x1B : dup : duplicate value on stack
@@ -26,9 +26,9 @@ instructions operating on the stack
     0x1D : swp : swap two values on stack
 
     0x20 : add : addition
-    0x21 : adc : addition with carry (increments thrid byte on overflow)
+    0x21 : adc : addition with carry (uses carry bit)
     0x22 : sub : subtraction
-    0x23 : sbc : subtraction with borrow (decrements thrid byte on underflow)
+    0x23 : sbc : subtraction with borrow (uses carry bit)
     0x24 : inc : increment
     0x25 : dec : decrement
     0x26 : ilt : is less than
