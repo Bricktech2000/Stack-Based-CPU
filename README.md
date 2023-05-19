@@ -1,6 +1,6 @@
 # Stack-Based CPU
 
-A custom stack-based CPU architecture
+_A custom stack-based CPU architecture_
 
 ## Dependencies
 
